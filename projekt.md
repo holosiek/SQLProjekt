@@ -355,4 +355,16 @@ INSERT INTO Uczniowie(Imie, Nazwisko, [Numer Telefonu Do Rodzica]) VALUES
 -- Tabela oplat za dany miesiac [szkola prywatna]
 ```
 
+# Widoki
+```sql
+-- Widok "Hierarchia" przedstawia pracowników oraz ich stanowiska w kolejności ID typów
+
+CREATE VIEW Hierarchia AS
+SELECT T.Nazwa, P.Imie, P.Nazwisko 
+FROM Pracownicy P 
+LEFT JOIN [Typ Pracownika] T
+ON P.Typ = T.ID 
+ORDER BY T.ID
+OFFSET 0 ROWS
+```
 # Typowe zapytania
