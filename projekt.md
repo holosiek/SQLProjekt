@@ -2,6 +2,7 @@
 
 ## Co ma być zawarte w PDF
 
+```diff
 - podstawowe założenia projektu (cel, główne założenia, możliwości, ograniczenia przyjęte przy projektowaniu),
 - diagram ER,
 - schemat bazy danych (diagram relacji),
@@ -12,16 +13,19 @@
 - opis wyzwalaczy,
 - skrypt tworzący bazę danych,
 - typowe zapytania.
+```
 
 ## Minimalne wymagania dotyczące bazy danych:
 
-- 8 poprawnie zaprojektowanych tabel (na osobę), przy czym w bazie danych powinno być minimum 10 tabel,
+```diff
++ 8 poprawnie zaprojektowanych tabel (na osobę), przy czym w bazie danych powinno być minimum 10 tabel,
 - baza powinna zawierać dane dotyczące atrybutów, których wartość zmienia się w czasie,
 - baza powinna zawierać tabele realizujące jeden ze schematów dziedziczenia,
 - 10 widoków lub funkcji,
 - baza danych powinna być odpowiednio oprogramowana z wykorzystaniem procedur składowanych i wyzwalaczy (co najmniej po 5 procedur i po 5 wyzwalaczy).
 - należy zaprojektować strategię pielęgnacji bazy danych (kopie zapasowe),
 - można utworzyć dwa programy klienckie: jeden umożliwiający pracę administratorską (użytkowników ze zwiększonymi uprawnieniami), drugi umożliwiający pracę zwykłych użytkowników.
+```
 
 # Tabele
 
