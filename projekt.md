@@ -20,10 +20,10 @@
 ```diff
 + 8 poprawnie zaprojektowanych tabel (na osobę), przy czym w bazie danych powinno być minimum 10 tabel,
 - baza powinna zawierać dane dotyczące atrybutów, których wartość zmienia się w czasie,
-- baza powinna zawierać tabele realizujące jeden ze schematów dziedziczenia,
++ baza powinna zawierać tabele realizujące jeden ze schematów dziedziczenia,
 - 10 widoków lub funkcji,
 - baza danych powinna być odpowiednio oprogramowana z wykorzystaniem procedur składowanych i wyzwalaczy (co najmniej po 5 procedur i po 5 wyzwalaczy).
-- należy zaprojektować strategię pielęgnacji bazy danych (kopie zapasowe),
++ należy zaprojektować strategię pielęgnacji bazy danych (kopie zapasowe),
 - można utworzyć dwa programy klienckie: jeden umożliwiający pracę administratorską (użytkowników ze zwiększonymi uprawnieniami), drugi umożliwiający pracę zwykłych użytkowników.
 ```
 
@@ -44,16 +44,19 @@
 - Czas Zajęć
 - Dni Wolne
 - Urlopy Pracowników
-
-- Obecnosc uczniow
-- Wydarzenia
-- Kola
+- Koła
+- Osoby
 
 ------------------------------------------------------------
 
 # Podstawowe założenia projektu
 
 Głównym celem projektu jest stworzenie bazy danych szkoły, która przechowywuje informacje na temat pracowników budynku, informacji na temat uczniów, ich wychowawców, ocen z danego przedmiot i planu zajęć. Projekt jest z założenia ograniczony tylko do pokazania podstawowych fukncji z możliwością rozwoju bazy danych w przyszłości do odpowiednich potrzeb.
+
+# Strategia pielęgnacji bazy danych
+
+- Pełna kopia zapasowa co tydzień
+- Różnicowa kopia zapasowa codziennie po północy
 
 # Diagram ER
 
@@ -107,11 +110,15 @@ CREATE TABLE Sale (
 CREATE TABLE [Dni Wolne] (
     Kiedy DATETIME
 )
--- Stworzenie tabeli Pracownicy
-CREATE TABLE Pracownicy (
+-- Stworzenie tabeli Osoby
+CREATE TABLE Osoby (
     ID INT IDENTITY(1,1) PRIMARY KEY,
     Imie VARCHAR(255) NOT NULL,
-    Nazwisko VARCHAR(255) NOT NULL,
+    Nazwisko VARCHAR(255) NOT NULL
+)
+-- Stworzenie tabeli Pracownicy
+CREATE TABLE Pracownicy (
+    ID INT REFERENCES Osoby(ID) ON DELETE CASCADE PRIMARY KEY NOT NULL,
     [Numer Telefonu] VARCHAR(16),
     Typ TINYINT REFERENCES [Typ Pracownika](ID) NOT NULL
 );
@@ -138,9 +145,7 @@ CREATE TABLE Klasy (
 );
 -- Stworzenie tabeli Uczniowie
 CREATE TABLE Uczniowie (
-    ID INT IDENTITY(1,1) PRIMARY KEY,
-    Imie VARCHAR(255) NOT NULL,
-    Nazwisko VARCHAR(255) NOT NULL,
+    ID INT REFERENCES Osoby(ID) ON DELETE CASCADE PRIMARY KEY NOT NULL,
     [Numer Telefonu Do Rodzica] VARCHAR(16)
 );
 -- Stworzenie tabeli Uczniowie Klas
@@ -153,7 +158,7 @@ CREATE TABLE Uwagi (
     UwagaID INT IDENTITY(1,1) PRIMARY KEY,
     UczenID INT REFERENCES Uczniowie(ID) ON DELETE CASCADE NOT NULL,
     Opis TEXT NOT NULL,
-    Tworca INT REFERENCES Pracownicy(ID) ON DELETE CASCADE NOT NULL
+    Tworca INT REFERENCES Pracownicy(ID) NOT NULL
 );
 -- Stworzenie tabeli Oceny
 CREATE TABLE Oceny (
