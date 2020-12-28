@@ -86,24 +86,29 @@ CREATE VIEW wyswietlanie_nauczycieli AS
 SELECT O.Imie, O.Nazwisko, P.[Numer Telefonu], 'Nauczyciel' Typ
 FROM Osoby O LEFT JOIN Pracownicy P 
 ON O.ID = P.ID
-LEFT JOIN [Przedmioty Nauczycieli] N
-ON N.ID = P.ID
-WHERE P.Typ = 4
+WHERE P.Typ = 'Nauczyciel'
 ```
 
 ```sql
--- widok "hierarchia" przedstawia pracowników oraz ich stanowiska w kolejności ID typów
--- w zamyśle, widok ten przeznaczony jest to pokazania 'hierarchii ważności stanowiskowej' w szkole
+-- widok "hierarchia" przedstawia pracowników oraz ich stanowiska w kolejności: dyrektor, administracja, nauczyciel, ekipa sprzątająca
+-- w zamyśle, widok ten przeznaczony jest do pokazania 'hierarchii ważności stanowiskowej' w szkole
+
 
 CREATE VIEW hierarchia AS
 SELECT T.Nazwa, O.Imie, O.Nazwisko 
 FROM Pracownicy P 
 JOIN [Typ Pracownika] T
-ON P.Typ = T.ID 
+ON P.Typ = T.Nazwa 
 JOIN Osoby O
 ON O.ID = P.ID
-ORDER BY Typ, Nazwisko
+ORDER BY CASE WHEN Typ = 'Dyrektor' THEN 1
+			  WHEN Typ = 'Administracja' THEN 2
+			  WHEN Typ = 'Nauczyciel' THEN 3
+			  WHEN Typ = 'Ekipa Sprzątająca' THEN 4
+			  ELSE 5
+		END ASC
 OFFSET 0 ROWS
+
 ```
 
 # Opis procedur składowych
@@ -607,4 +612,35 @@ EXEC dbo.dodaj_pracownika @Imie = 'Tomasz', @Nazwisko = 'Zaucha',
 GO
 ```
 
+```sql
+
+-- funkcja wypisuje pracowników o typie podanym w argumencie
+GO
+CREATE PROC dbo.wypisz_typem
+ 
+@Typ VARCHAR(255)
+
+AS
+ 
+DECLARE @blad AS NVARCHAR(500);
+ 
+IF @Typ is NULL
+BEGIN
+     SET @blad = 'Błędne dane!';
+     RAISERROR(@blad, 16,1);
+     RETURN;
+END
+ 
+SELECT O.Imie, O.Nazwisko, P.[Numer Telefonu], @Typ
+FROM Osoby O LEFT JOIN Pracownicy P 
+ON O.ID = P.ID
+WHERE Typ = @Typ
+ 
+GO
+```
+```sql
+-- przyklad wywołania powyższej funkcji:
+EXEC dbo.wypisz_typem @Typ = 'Administracja'
+GO
+```
 # Typowe zapytania
