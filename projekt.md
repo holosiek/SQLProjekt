@@ -6,7 +6,7 @@
 - podstawowe założenia projektu (cel, główne założenia, możliwości, ograniczenia przyjęte przy projektowaniu),
 - diagram ER,
 - schemat bazy danych (diagram relacji),
-- dodatkowe więzy integralności danych (nie zapisane w schemacie),
+- dodatkowe więzy integralności danych (niezapisane w schemacie),
 - utworzone indeksy,
 - opis stworzonych widoków,
 - opis procedur składowanych,
@@ -80,10 +80,10 @@ OFFSET 0 ROWS
 ```
 
 ```sql
--- wyświetla nauczycieli: ich imiona, nazwiska, numery tel., zawód oraz przedmiot którego uczą
+-- wyświetla nauczycieli: ich imiona, nazwiska, numery tel., typ (oczywiście 'nauczyciel')
 
 CREATE VIEW wyswietlanie_nauczycieli AS
-SELECT O.Imie, O.Nazwisko, P.[Numer Telefonu], 'Nauczyciel' Typ, N.Przedmiot
+SELECT O.Imie, O.Nazwisko, P.[Numer Telefonu], 'Nauczyciel' Typ
 FROM Osoby O LEFT JOIN Pracownicy P 
 ON O.ID = P.ID
 LEFT JOIN [Przedmioty Nauczycieli] N
@@ -92,15 +92,17 @@ WHERE P.Typ = 4
 ```
 
 ```sql
--- widok "Hierarchia" przedstawia pracowników oraz ich stanowiska w kolejności ID typów
--- nieco do poprawy, działało dla poprzedniej wersji tabel
+-- widok "hierarchia" przedstawia pracowników oraz ich stanowiska w kolejności ID typów
+-- w zamyśle, widok ten przeznaczony jest to pokazania 'hierarchii ważności stanowiskowej' w szkole
 
-CREATE VIEW Hierarchia AS
-SELECT T.Nazwa, P.Imie, P.Nazwisko 
+CREATE VIEW hierarchia AS
+SELECT T.Nazwa, O.Imie, O.Nazwisko 
 FROM Pracownicy P 
-LEFT JOIN [Typ Pracownika] T
+JOIN [Typ Pracownika] T
 ON P.Typ = T.ID 
-ORDER BY T.ID
+JOIN Osoby O
+ON O.ID = P.ID
+ORDER BY Typ, Nazwisko
 OFFSET 0 ROWS
 ```
 
