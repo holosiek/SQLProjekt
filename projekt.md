@@ -68,6 +68,42 @@ Głównym celem projektu jest stworzenie bazy danych szkoły, która przechowywu
 
 # Opis stworzonych widoków
 
+```sql
+-- alfabetyczne (za nazwiskiem a następnie za imieniem) wyświetlanie uczniów
+
+CREATE VIEW wyswietlanie_uczniow AS
+SELECT O.Imie, O.Nazwisko, U.[Numer Telefonu Do Rodzica], 'Uczeń' Typ
+FROM Osoby O JOIN Uczniowie U 
+ON O.ID = U.ID
+ORDER BY Nazwisko, Imie
+OFFSET 0 ROWS
+```
+
+```sql
+-- wyświetla nauczycieli: ich imiona, nazwiska, numery tel., zawód oraz przedmiot którego uczą
+
+CREATE VIEW wyswietlanie_nauczycieli AS
+SELECT O.Imie, O.Nazwisko, P.[Numer Telefonu], 'Nauczyciel' Typ, N.Przedmiot
+FROM Osoby O LEFT JOIN Pracownicy P 
+ON O.ID = P.ID
+LEFT JOIN [Przedmioty Nauczycieli] N
+ON N.ID = P.ID
+WHERE P.Typ = 4
+```
+
+```sql
+-- widok "Hierarchia" przedstawia pracowników oraz ich stanowiska w kolejności ID typów
+-- nieco do poprawy, działało dla poprzedniej wersji tabel
+
+CREATE VIEW Hierarchia AS
+SELECT T.Nazwa, P.Imie, P.Nazwisko 
+FROM Pracownicy P 
+LEFT JOIN [Typ Pracownika] T
+ON P.Typ = T.ID 
+ORDER BY T.ID
+OFFSET 0 ROWS
+```
+
 # Opis procedur składowych
 
 # Opis wyzwalaczy
@@ -355,16 +391,51 @@ INSERT INTO Uczniowie(Imie, Nazwisko, [Numer Telefonu Do Rodzica]) VALUES
 -- Tabela oplat za dany miesiac [szkola prywatna]
 ```
 
-# Widoki
-```sql
--- Widok "Hierarchia" przedstawia pracowników oraz ich stanowiska w kolejności ID typów
+# Przykładowe funkcje (sekcja robocza)
 
-CREATE VIEW Hierarchia AS
-SELECT T.Nazwa, P.Imie, P.Nazwisko 
-FROM Pracownicy P 
-LEFT JOIN [Typ Pracownika] T
-ON P.Typ = T.ID 
-ORDER BY T.ID
-OFFSET 0 ROWS
+```sql
+-- funkcja dodaje nowego pracownika do naszej bazy,
+-- poprzez dodanie do tabel Osoby, Pracownicy (i ewentualnie Przedmioty Nauczycieli) osoby o tym samym numerze ID
+GO
+CREATE PROC dbo.dodaj_pracownika
+ 
+@Imie VARCHAR(200) = NULL,
+@Nazwisko VARCHAR(200) = NULL,
+@ID INT = NULL,
+@Numer VARCHAR(200),
+@Typ TINYINT = NULL,
+@Przedmiot TINYINT = NULL
+ 
+AS
+ 
+DECLARE @blad AS NVARCHAR(500);
+ 
+IF @Imie IS NULL OR @Nazwisko IS NULL OR @ID IS NULL OR @Typ IS NULL
+OR @Przedmiot IS NULL
+BEGIN
+     SET @blad = 'Błędne dane!';
+     RAISERROR(@blad, 16,1);
+     RETURN;
+END
+ 
+INSERT INTO Osoby(Imie, Nazwisko)
+VALUES (@Imie, @Nazwisko);
+
+INSERT INTO Pracownicy(ID, [Numer Telefonu], Typ)
+VALUES(@ID, @Numer, @Typ)
+
+-- jeśli to nauczyciel, to dokładamy jego przedmiot do danej tabeli
+IF @Typ = 4
+INSERT INTO [Przedmioty Nauczycieli](ID, Przedmiot)
+VALUES(@ID, @Przedmiot)
+ 
+GO
 ```
+```sql
+-- przykładowe wywołanie powyższej funkcji dla pustych tabel
+EXEC dbo.dodaj_pracownika @Imie = 'Tomasz', @Nazwisko = 'Zaucha', 
+@Numer = '113234231', @ID = 1, @Typ = 4, @Przedmiot = 1
+GO
+```
+
 # Typowe zapytania
