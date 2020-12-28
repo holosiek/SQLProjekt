@@ -6,7 +6,7 @@
 - podstawowe założenia projektu (cel, główne założenia, możliwości, ograniczenia przyjęte przy projektowaniu),
 - diagram ER,
 - schemat bazy danych (diagram relacji),
-- dodatkowe więzy integralności danych (nie zapisane w schemacie),
+- dodatkowe więzy integralności danych (niezapisane w schemacie),
 - utworzone indeksy,
 - opis stworzonych widoków,
 - opis procedur składowanych,
@@ -67,6 +67,44 @@ Głównym celem projektu jest stworzenie bazy danych szkoły, która przechowywu
 # Utworzone indeksy
 
 # Opis stworzonych widoków
+
+```sql
+-- alfabetyczne (za nazwiskiem a następnie za imieniem) wyświetlanie uczniów
+
+CREATE VIEW wyswietlanie_uczniow AS
+SELECT O.Imie, O.Nazwisko, U.[Numer Telefonu Do Rodzica], 'Uczeń' Typ
+FROM Osoby O JOIN Uczniowie U 
+ON O.ID = U.ID
+ORDER BY Nazwisko, Imie
+OFFSET 0 ROWS
+```
+
+```sql
+-- wyświetla nauczycieli: ich imiona, nazwiska, numery tel., typ (oczywiście 'nauczyciel')
+
+CREATE VIEW wyswietlanie_nauczycieli AS
+SELECT O.Imie, O.Nazwisko, P.[Numer Telefonu], 'Nauczyciel' Typ
+FROM Osoby O LEFT JOIN Pracownicy P 
+ON O.ID = P.ID
+LEFT JOIN [Przedmioty Nauczycieli] N
+ON N.ID = P.ID
+WHERE P.Typ = 4
+```
+
+```sql
+-- widok "hierarchia" przedstawia pracowników oraz ich stanowiska w kolejności ID typów
+-- w zamyśle, widok ten przeznaczony jest to pokazania 'hierarchii ważności stanowiskowej' w szkole
+
+CREATE VIEW hierarchia AS
+SELECT T.Nazwa, O.Imie, O.Nazwisko 
+FROM Pracownicy P 
+JOIN [Typ Pracownika] T
+ON P.Typ = T.ID 
+JOIN Osoby O
+ON O.ID = P.ID
+ORDER BY Typ, Nazwisko
+OFFSET 0 ROWS
+```
 
 # Opis procedur składowych
 
@@ -422,6 +460,53 @@ INSERT INTO Uczniowie(ID, Imie, Nazwisko, [Numer Telefonu Do Rodzica]) VALUES
 
 INSERT INTO [Uczniowie Klas]([Nazwa Klasy], Uczen) VALUES
 ('3B',21),('3B',22),('3E',23),('3A',24),('2E',25),('2D',26),('2C',27),('2B',28),('2B',29),('1F',30),('3D',31),('3C',32),('1D',33),('2D',34),('2B',35),('1B',36),('3B',37),('2C',38),('2B',39),('3B',40),('1D',41),('1D',42),('3A',43),('3D',44),('2E',45),('1A',46),('3D',47),('1B',48),('3C',49),('1C',50),('1A',51),('1E',52),('1E',53),('1E',54),('3C',55),('3E',56),('1D',57),('1D',58),('2B',59),('1D',60),('3D',61),('3A',62),('2E',63),('2D',64),('2E',65),('1A',66),('1C',67),('1E',68),('1C',69),('3A',70),('1B',71),('2A',72),('2A',73),('3C',74),('1D',75),('3B',76),('3C',77),('3A',78),('1B',79),('1D',80),('1C',81),('1E',82),('1C',83),('3E',84),('2B',85),('2A',86),('3A',87),('3C',88),('1D',89),('2B',90),('3B',91),('1A',92),('1F',93),('2C',94),('2C',95),('1F',96),('1E',97),('1A',98),('2E',99),('3C',100),('3B',101),('3C',102),('2C',103),('2A',104),('2E',105),('2B',106),('3E',107),('3E',108),('3B',109),('1A',110),('3E',111),('3A',112),('1A',113),('1C',114),('2D',115),('3D',116),('2E',117),('3E',118),('2D',119)
+```
+
+# Przykładowe funkcje (sekcja robocza)
+
+```sql
+-- funkcja dodaje nowego pracownika do naszej bazy,
+-- poprzez dodanie do tabel Osoby, Pracownicy (i ewentualnie Przedmioty Nauczycieli) osoby o tym samym numerze ID
+GO
+CREATE PROC dbo.dodaj_pracownika
+ 
+@Imie VARCHAR(200) = NULL,
+@Nazwisko VARCHAR(200) = NULL,
+@ID INT = NULL,
+@Numer VARCHAR(200),
+@Typ TINYINT = NULL,
+@Przedmiot TINYINT = NULL
+ 
+AS
+ 
+DECLARE @blad AS NVARCHAR(500);
+ 
+IF @Imie IS NULL OR @Nazwisko IS NULL OR @ID IS NULL OR @Typ IS NULL
+OR @Przedmiot IS NULL
+BEGIN
+     SET @blad = 'Błędne dane!';
+     RAISERROR(@blad, 16,1);
+     RETURN;
+END
+ 
+INSERT INTO Osoby(Imie, Nazwisko)
+VALUES (@Imie, @Nazwisko);
+
+INSERT INTO Pracownicy(ID, [Numer Telefonu], Typ)
+VALUES(@ID, @Numer, @Typ)
+
+-- jeśli to nauczyciel, to dokładamy jego przedmiot do danej tabeli
+IF @Typ = 4
+INSERT INTO [Przedmioty Nauczycieli](ID, Przedmiot)
+VALUES(@ID, @Przedmiot)
+ 
+GO
+```
+```sql
+-- przykładowe wywołanie powyższej funkcji dla pustych tabel
+EXEC dbo.dodaj_pracownika @Imie = 'Tomasz', @Nazwisko = 'Zaucha', 
+@Numer = '113234231', @ID = 1, @Typ = 4, @Przedmiot = 1
+GO
 ```
 
 # Typowe zapytania
