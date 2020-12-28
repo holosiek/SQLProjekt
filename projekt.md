@@ -69,13 +69,15 @@ Głównym celem projektu jest stworzenie bazy danych szkoły, która przechowywu
 # Opis stworzonych widoków
 
 ```sql
--- alfabetyczne (za nazwiskiem a następnie za imieniem) wyświetlanie uczniów
+-- wypisanie uczniów w kolejności klas (od 1A licząc), wewnątrz danej klasy sortujemy za nazwiskiem, a następnie za imieniem
 
 CREATE VIEW wyswietlanie_uczniow AS
-SELECT O.Imie, O.Nazwisko, U.[Numer Telefonu Do Rodzica], 'Uczeń' Typ
+SELECT O.Imie, O.Nazwisko, U.[Numer Telefonu Do Rodzica], 'Uczeń' Typ, K.[Nazwa Klasy]
 FROM Osoby O JOIN Uczniowie U 
 ON O.ID = U.ID
-ORDER BY Nazwisko, Imie
+JOIN [Uczniowie Klas] K
+ON U.ID = K.Uczen
+ORDER BY [Nazwa Klasy], Nazwisko, Imie
 OFFSET 0 ROWS
 ```
 
@@ -570,24 +572,25 @@ INSERT INTO [Uczniowie Klas]([Nazwa Klasy], Uczen) VALUES
 ```sql
 -- funkcja dodaje nowego pracownika do naszej bazy,
 -- poprzez dodanie do tabel Osoby, Pracownicy (i ewentualnie Przedmioty Nauczycieli) osoby o tym samym numerze ID
+
 GO
 CREATE PROC dbo.dodaj_pracownika
  
-@Imie VARCHAR(200) = NULL,
-@Nazwisko VARCHAR(200) = NULL,
+@Imie VARCHAR(255) = NULL,
+@Nazwisko VARCHAR(255) = NULL,
 @ID INT = NULL,
-@Numer VARCHAR(200),
-@Typ TINYINT = NULL,
-@Przedmiot TINYINT = NULL
+@Numer VARCHAR(16),
+@Typ  VARCHAR(255) = NULL,
+@Przedmiot TINYINT = 0
  
 AS
  
 DECLARE @blad AS NVARCHAR(500);
  
 IF @Imie IS NULL OR @Nazwisko IS NULL OR @ID IS NULL OR @Typ IS NULL
-OR @Przedmiot IS NULL
+OR (@Typ = 'Nauczyciel' AND @Przedmiot = 0)
 BEGIN
-     SET @blad = 'Błędne dane!';
+     SET @blad = 'Błędne dane, sprawdź podane argumenty.';
      RAISERROR(@blad, 16,1);
      RETURN;
 END
@@ -599,16 +602,66 @@ INSERT INTO Pracownicy(ID, [Numer Telefonu], Typ)
 VALUES(@ID, @Numer, @Typ)
 
 -- jeśli to nauczyciel, to dokładamy jego przedmiot do danej tabeli
-IF @Typ = 4
+IF @Typ = 'Nauczyciel'
 INSERT INTO [Przedmioty Nauczycieli](ID, Przedmiot)
 VALUES(@ID, @Przedmiot)
  
 GO
-```
-```sql
--- przykładowe wywołanie powyższej funkcji dla pustych tabel
+
+-- przykładowe wywołanie powyższej funkcji, dodanie nauczyciela:
+
+DECLARE @cd INT
+SELECT @cd = COUNT(*) FROM Pracownicy
+SET @cd = @cd + 1
+
 EXEC dbo.dodaj_pracownika @Imie = 'Tomasz', @Nazwisko = 'Zaucha', 
-@Numer = '113234231', @ID = 1, @Typ = 4, @Przedmiot = 1
+@Numer = '523456789', @ID = @cd, @Typ = 'Nauczyciel', @Przedmiot = 5
+GO
+```
+
+```sql
+-- funkcja dodaje nowego ucznia do naszej bazy posiadającego swoje dane osobiste oraz klasę
+
+GO
+CREATE PROC dbo.dodaj_ucznia
+ 
+@Imie VARCHAR(255) = NULL,
+@Nazwisko VARCHAR(255) = NULL,
+@ID INT = NULL,
+@Numer VARCHAR(16),
+@Klasa  VARCHAR(10) = NULL
+
+AS
+ 
+DECLARE @blad AS NVARCHAR(500);
+ 
+IF @Imie IS NULL OR @Nazwisko IS NULL OR @ID IS NULL OR @Klasa IS NULL
+
+BEGIN
+	SET @blad = 'Błędne dane, sprawdź podane argumenty.';
+	RAISERROR(@blad, 16,1);
+    RETURN;
+END
+ 
+INSERT INTO Osoby(Imie, Nazwisko)
+VALUES (@Imie, @Nazwisko);
+
+INSERT INTO Uczniowie(ID, [Numer Telefonu Do Rodzica])
+VALUES(@ID, @Numer)
+
+INSERT INTO [Uczniowie Klas]([Nazwa Klasy], Uczen)
+VALUES(@Klasa, @ID)
+
+GO
+
+-- przykładowe wywołanie powyższej funkcji (dodanie ucznia Tomka Mikulskiego z klasy 2A)
+
+DECLARE @cd INT
+SELECT @cd = COUNT(*) FROM Osoby
+SET @cd = @cd + 1
+
+EXEC dbo.dodaj_ucznia @Imie = 'Tomek', @Nazwisko = 'Mikulski', 
+@Numer = '123456789', @ID = @cd, @Klasa = '2A'
 GO
 ```
 
@@ -637,9 +690,10 @@ ON O.ID = P.ID
 WHERE Typ = @Typ
  
 GO
-```
-```sql
--- przyklad wywołania powyższej funkcji:
+
+
+-- przykładowe wywołanie powyższej funkcji:
+
 EXEC dbo.wypisz_typem @Typ = 'Administracja'
 GO
 ```
