@@ -117,6 +117,47 @@ OFFSET 0 ROWS
 
 # Opis wyzwalaczy
 
+Proste przykładowe wyzwalacze. Głównie informują o zdarzeniach zrealizowanych przez użytkownika, takich jak np. dodanie nowego ucznia (poprzez automatyczne wypisanie komunikatu - brak wymagań szczegółowych w zasadach projektu). Podobna realizacja dostępna była w niektórych starszych wersjach dzienników elektronicznych. Oczywiście bardziej szczegółowy opis będzie napisany na końcu. \
+Podane niżej triggery są bardzo proste, można pomyśleć o nowych, bardziej zaawansowanych w przyszłości (chociaż nie wiem w jakim celu bardziej by się przydały).
+
+```sql
+IF OBJECT_ID('dodano_ucznia', 'TR') IS NOT NULL
+	DROP TRIGGER dodano_ucznia
+GO
+
+CREATE TRIGGER dodano_ucznia ON Uczniowie
+AFTER INSERT
+AS BEGIN
+SELECT 'POMYŚLNIE DODANO UCZNIA'
+END
+GO
+
+```
+```sql
+IF OBJECT_ID('dodano_pracownika', 'TR') IS NOT NULL
+	DROP TRIGGER dodano_pracownika
+GO
+
+CREATE TRIGGER dodano_pracownika ON Pracownicy
+AFTER INSERT
+AS BEGIN
+SELECT 'POMYŚLNIE DODANO PRACOWNIKA'
+END
+GO
+```
+```sql
+IF OBJECT_ID('dodano_ocene', 'TR') IS NOT NULL
+	DROP TRIGGER dodano_ocene
+GO
+
+CREATE TRIGGER dodano_ocene ON Oceny
+AFTER INSERT
+AS BEGIN
+SELECT 'POMYŚLNIE DODANO NOWĄ OCENĘ'
+END
+GO
+```
+
 # Skrypt tworzący bazę danych
 
 ```sql
@@ -567,7 +608,7 @@ INSERT INTO [Uczniowie Klas]([Nazwa Klasy], Uczen) VALUES
 ('3B',21),('3B',22),('3E',23),('3A',24),('2E',25),('2D',26),('2C',27),('2B',28),('2B',29),('1F',30),('3D',31),('3C',32),('1D',33),('2D',34),('2B',35),('1B',36),('3B',37),('2C',38),('2B',39),('3B',40),('1D',41),('1D',42),('3A',43),('3D',44),('2E',45),('1A',46),('3D',47),('1B',48),('3C',49),('1C',50),('1A',51),('1E',52),('1E',53),('1E',54),('3C',55),('3E',56),('1D',57),('1D',58),('2B',59),('1D',60),('3D',61),('3A',62),('2E',63),('2D',64),('2E',65),('1A',66),('1C',67),('1E',68),('1C',69),('3A',70),('1B',71),('2A',72),('2A',73),('3C',74),('1D',75),('3B',76),('3C',77),('3A',78),('1B',79),('1D',80),('1C',81),('1E',82),('1C',83),('3E',84),('2B',85),('2A',86),('3A',87),('3C',88),('1D',89),('2B',90),('3B',91),('1A',92),('1F',93),('2C',94),('2C',95),('1F',96),('1E',97),('1A',98),('2E',99),('3C',100),('3B',101),('3C',102),('2C',103),('2A',104),('2E',105),('2B',106),('3E',107),('3E',108),('3B',109),('1A',110),('3E',111),('3A',112),('1A',113),('1C',114),('2D',115),('3D',116),('2E',117),('3E',118),('2D',119)
 ```
 
-# Przykładowe funkcje (sekcja robocza)
+# Funkcje i procedury (sekcja robocza)
 
 ```sql
 -- funkcja dodaje nowego pracownika do naszej bazy,
@@ -669,22 +710,13 @@ GO
 
 -- funkcja wypisuje pracowników o typie podanym w argumencie
 GO
-CREATE PROC dbo.wypisz_typem
- 
-@Typ VARCHAR(255)
+CREATE FUNCTION dbo.wypisz_typem (@Typ AS VARCHAR(255))
+RETURNS TABLE
 
 AS
  
-DECLARE @blad AS NVARCHAR(500);
- 
-IF @Typ is NULL
-BEGIN
-     SET @blad = 'Błędne dane!';
-     RAISERROR(@blad, 16,1);
-     RETURN;
-END
- 
-SELECT O.Imie, O.Nazwisko, P.[Numer Telefonu], @Typ
+RETURN
+SELECT O.Imie, O.Nazwisko, P.[Numer Telefonu], Typ
 FROM Osoby O LEFT JOIN Pracownicy P 
 ON O.ID = P.ID
 WHERE Typ = @Typ
@@ -694,7 +726,78 @@ GO
 
 -- przykładowe wywołanie powyższej funkcji:
 
-EXEC dbo.wypisz_typem @Typ = 'Administracja'
+SELECT * FROM dbo.wypisz_typem('Administracja')
+```
+
+```sql
+-- funkcja wypisująca ID, Imię, Nazwisko oraz Oceny (wraz z datą ich dodania) danego ucznia, którego ID podamy w argumencie
+
+GO
+CREATE FUNCTION dbo.wypisz_oceny (@ID AS INT)
+RETURNS TABLE
+
+AS
+ 
+RETURN
+SELECT O.ID, O.Imie, O.Nazwisko, Oc.Ocena, Oc.Kiedy
+FROM Osoby O
+LEFT JOIN Oceny Oc
+ON Oc.UczenID = O.ID
+WHERE O.ID = @ID
+
+GO
+
+
+-- przykładowe wywołanie funkcji, wypisujemy dane ucznia o ID = 21, wraz z jego ocenami:
+
+SELECT * FROM dbo.wypisz_oceny(21)
+
+```
+
+```sql
+-- procedura dodająca ocenę uczniowi o danym ID
+GO
+CREATE PROC dbo.dodaj_ocene
+ 
+@ID INT = NULL,
+@Ocena TINYINT = NULL,
+@Typ TINYINT = NULL,
+@Przedmiot TINYINT = NULL,
+@Opis TEXT = NULL,
+@Wpisujacy INT = NULL,
+@Kiedy DATETIME2 = NULL
+
+AS
+ 
+DECLARE @blad AS NVARCHAR(500);
+ 
+IF @ID IS NULL OR @Ocena IS NULL OR @Typ IS NULL
+OR @Przedmiot IS NULL OR @Wpisujacy IS NULL
+
+BEGIN
+	SET @blad = 'Błędne dane, sprawdź podane argumenty.';
+	RAISERROR(@blad, 16,1);
+    RETURN;
+END
+
+IF @Ocena > 6 OR @Ocena < 1
+
+BEGIN
+	SET @blad = 'Zła wartość oceny';
+	RAISERROR(@blad, 16,1);
+    RETURN;
+END
+ 
+INSERT INTO Oceny(UczenID, Ocena, [Typ Oceny], Przedmiot, Opis, Wpisujacy, Kiedy)
+VALUES (@ID, @Ocena, @Typ, @Przedmiot, @Opis, @Wpisujacy, @Kiedy);
+
+GO
+
+
+-- przykład, dodajemy uczniowi o ID = 21 ocenę 4 z podanymi innymi danymi:
+
+EXEC dbo.dodaj_ocene @ID = 21, @Ocena = 4, @Typ = 2, @Przedmiot = 3,
+@Opis = 'Opis oceny', @Wpisujacy = 2, @Kiedy = '2020-12-11'
 GO
 ```
 # Typowe zapytania
