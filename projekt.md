@@ -730,7 +730,8 @@ SELECT * FROM dbo.wypisz_typem('Administracja')
 ```
 
 ```sql
--- funkcja wypisująca ID, Imię, Nazwisko oraz Oceny (wraz z datą ich dodania) danego ucznia, którego ID podamy w argumencie
+-- funkcja wypisująca ID, Imię, Nazwisko i Oceny (wraz z typem, wagą, oraz datą ich dodania) danego ucznia, którego ID podamy w argumencie
+-- posortowane od najnowszych dat dodania (kolumna "kiedy")
 
 GO
 CREATE FUNCTION dbo.wypisz_oceny (@ID AS INT)
@@ -738,12 +739,14 @@ RETURNS TABLE
 
 AS
  
-RETURN
-SELECT O.ID, O.Imie, O.Nazwisko, Oc.Ocena, Oc.Kiedy
+SELECT O.ID, O.Imie, O.Nazwisko, Oc.Ocena, T.Nazwa, T.Waga, Oc.Kiedy
 FROM Osoby O
 LEFT JOIN Oceny Oc
 ON Oc.UczenID = O.ID
+LEFT JOIN [Typ Ocen] T
+ON T.ID = Oc.[Typ Oceny]
 WHERE O.ID = @ID
+ORDER BY Kiedy DESC
 
 GO
 
