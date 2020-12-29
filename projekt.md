@@ -79,6 +79,7 @@ JOIN [Uczniowie Klas] K
 ON U.ID = K.Uczen
 ORDER BY [Nazwa Klasy], Nazwisko, Imie
 OFFSET 0 ROWS
+
 ```
 
 ```sql
@@ -115,9 +116,152 @@ OFFSET 0 ROWS
 
 # Opis procedur składowych
 
+```sql
+-- procedura ta dodaje nowego pracownika do naszej bazy,
+-- poprzez dodanie do tabel Osoby, Pracownicy (i ewentualnie Przedmioty Nauczycieli) osoby o tym samym numerze ID
+
+GO
+CREATE PROC dbo.dodaj_pracownika
+ 
+@Imie VARCHAR(255) = NULL,
+@Nazwisko VARCHAR(255) = NULL,
+@ID INT = NULL,
+@Numer VARCHAR(16),
+@Typ  VARCHAR(255) = NULL,
+@Przedmiot TINYINT = 0
+ 
+AS
+ 
+DECLARE @blad AS NVARCHAR(500);
+ 
+IF @Imie IS NULL OR @Nazwisko IS NULL OR @ID IS NULL OR @Typ IS NULL
+OR (@Typ = 'Nauczyciel' AND @Przedmiot = 0)
+BEGIN
+     SET @blad = 'Błędne dane, sprawdź podane argumenty.';
+     RAISERROR(@blad, 16,1);
+     RETURN;
+END
+ 
+INSERT INTO Osoby(Imie, Nazwisko)
+VALUES (@Imie, @Nazwisko);
+
+INSERT INTO Pracownicy(ID, [Numer Telefonu], Typ)
+VALUES(@ID, @Numer, @Typ)
+
+-- jeśli to nauczyciel, to dokładamy jego przedmiot do danej tabeli
+IF @Typ = 'Nauczyciel'
+INSERT INTO [Przedmioty Nauczycieli](ID, Przedmiot)
+VALUES(@ID, @Przedmiot)
+ 
+GO
+
+-- przykładowe wywołanie powyższej procedury, dodanie pracownika (nauczyciela):
+
+DECLARE @cd INT
+SELECT @cd = COUNT(*) FROM Pracownicy
+SET @cd = @cd + 1
+
+EXEC dbo.dodaj_pracownika @Imie = 'Tomasz', @Nazwisko = 'Zaucha', 
+@Numer = '523456789', @ID = @cd, @Typ = 'Nauczyciel', @Przedmiot = 5
+GO
+```
+
+```sql
+-- procedura dodaje nowego ucznia do naszej bazy posiadającego swoje dane osobiste oraz klasę
+
+GO
+CREATE PROC dbo.dodaj_ucznia
+ 
+@Imie VARCHAR(255) = NULL,
+@Nazwisko VARCHAR(255) = NULL,
+@ID INT = NULL,
+@Numer VARCHAR(16),
+@Klasa  VARCHAR(10) = NULL
+
+AS
+ 
+DECLARE @blad AS NVARCHAR(500);
+ 
+IF @Imie IS NULL OR @Nazwisko IS NULL OR @ID IS NULL OR @Klasa IS NULL
+
+BEGIN
+	SET @blad = 'Błędne dane, sprawdź podane argumenty.';
+	RAISERROR(@blad, 16,1);
+    RETURN;
+END
+ 
+INSERT INTO Osoby(Imie, Nazwisko)
+VALUES (@Imie, @Nazwisko);
+
+INSERT INTO Uczniowie(ID, [Numer Telefonu Do Rodzica])
+VALUES(@ID, @Numer)
+
+INSERT INTO [Uczniowie Klas]([Nazwa Klasy], Uczen)
+VALUES(@Klasa, @ID)
+
+GO
+
+-- przykładowe wywołanie powyższej procedury (dodanie ucznia Tomka Mikulskiego z klasy 2A)
+
+DECLARE @cd INT
+SELECT @cd = COUNT(*) FROM Osoby
+SET @cd = @cd + 1
+
+EXEC dbo.dodaj_ucznia @Imie = 'Tomek', @Nazwisko = 'Mikulski', 
+@Numer = '123456789', @ID = @cd, @Klasa = '2A'
+GO
+```
+
+```sql
+-- procedura dodająca ocenę uczniowi o danym ID
+GO
+CREATE PROC dbo.dodaj_ocene
+ 
+@ID INT = NULL,
+@Ocena TINYINT = NULL,
+@Typ TINYINT = NULL,
+@Przedmiot TINYINT = NULL,
+@Opis TEXT = NULL,
+@Wpisujacy INT = NULL,
+@Kiedy DATETIME2 = NULL
+
+AS
+ 
+DECLARE @blad AS NVARCHAR(500);
+ 
+IF @ID IS NULL OR @Ocena IS NULL OR @Typ IS NULL
+OR @Przedmiot IS NULL OR @Wpisujacy IS NULL
+
+BEGIN
+	SET @blad = 'Błędne dane, sprawdź podane argumenty.';
+	RAISERROR(@blad, 16,1);
+    RETURN;
+END
+
+IF @Ocena > 6 OR @Ocena < 1
+
+BEGIN
+	SET @blad = 'Zła wartość oceny';
+	RAISERROR(@blad, 16,1);
+    RETURN;
+END
+ 
+INSERT INTO Oceny(UczenID, Ocena, [Typ Oceny], Przedmiot, Opis, Wpisujacy, Kiedy)
+VALUES (@ID, @Ocena, @Typ, @Przedmiot, @Opis, @Wpisujacy, @Kiedy);
+
+GO
+
+
+-- przykład, dodajemy uczniowi o ID = 21 ocenę 4 z podanymi innymi danymi:
+
+EXEC dbo.dodaj_ocene @ID = 21, @Ocena = 4, @Typ = 2, @Przedmiot = 3,
+@Opis = 'Opis oceny', @Wpisujacy = 2, @Kiedy = '2020-12-11'
+GO
+```
+
 # Opis wyzwalaczy
 
-Proste przykładowe wyzwalacze. Głównie informują o zdarzeniach zrealizowanych przez użytkownika, takich jak np. dodanie nowego ucznia (poprzez automatyczne wypisanie komunikatu - brak wymagań szczegółowych w zasadach projektu). Podobna realizacja dostępna była w niektórych starszych wersjach dzienników elektronicznych. Oczywiście bardziej szczegółowy opis będzie napisany na końcu. \
+Proste przykładowe wyzwalacze. Głównie informują o zdarzeniach zrealizowanych przez użytkownika, takich jak np. dodanie nowego ucznia (poprzez automatyczne wypisanie komunikatu - brak wymagań szczegółowych w zasadach projektu). Dodatkowo wyświetlany jest komunikat o liczebności danej tabeli (np. o aktualnej liczbie uczniów w bazie) Podobna realizacja dostępna była w niektórych starszych wersjach dzienników elektronicznych. Oczywiście bardziej szczegółowy opis będzie napisany na końcu. \
 Podane niżej triggery są bardzo proste, można pomyśleć o nowych, bardziej zaawansowanych w przyszłości (chociaż nie wiem w jakim celu bardziej by się przydały).
 
 ```sql
@@ -128,20 +272,28 @@ GO
 CREATE TRIGGER dodano_ucznia ON Uczniowie
 AFTER INSERT
 AS BEGIN
-SELECT 'POMYŚLNIE DODANO UCZNIA'
+
+DECLARE @msg NVARCHAR(55) = NULL
+DECLARE @nr INT
+SELECT @nr = COUNT(*) FROM dbo.Uczniowie
+SET @msg = 'Mamy obecnie ' + CAST(@nr AS VARCHAR(10)) + ' uczniów w naszej bazie danych.'
+SELECT 'POMYŚLNIE DODANO UCZNIA' [Komunikat 1], @msg [Komunikat 2]
+
 END
 GO
 
 ```
 ```sql
-IF OBJECT_ID('dodano_pracownika', 'TR') IS NOT NULL
-	DROP TRIGGER dodano_pracownika
-GO
-
 CREATE TRIGGER dodano_pracownika ON Pracownicy
 AFTER INSERT
 AS BEGIN
-SELECT 'POMYŚLNIE DODANO PRACOWNIKA'
+
+DECLARE @msg NVARCHAR(55) = NULL
+DECLARE @nr INT
+SELECT @nr = COUNT(*) FROM dbo.Pracownicy
+SET @msg = 'Mamy obecnie ' + CAST(@nr AS VARCHAR(10)) + ' pracowników w naszej bazie danych.'
+SELECT 'POMYŚLNIE DODANO PRACOWNIKA' [Komunikat 1], @msg [Komunikat 2]
+
 END
 GO
 ```
@@ -608,103 +760,7 @@ INSERT INTO [Uczniowie Klas]([Nazwa Klasy], Uczen) VALUES
 ('3B',21),('3B',22),('3E',23),('3A',24),('2E',25),('2D',26),('2C',27),('2B',28),('2B',29),('1F',30),('3D',31),('3C',32),('1D',33),('2D',34),('2B',35),('1B',36),('3B',37),('2C',38),('2B',39),('3B',40),('1D',41),('1D',42),('3A',43),('3D',44),('2E',45),('1A',46),('3D',47),('1B',48),('3C',49),('1C',50),('1A',51),('1E',52),('1E',53),('1E',54),('3C',55),('3E',56),('1D',57),('1D',58),('2B',59),('1D',60),('3D',61),('3A',62),('2E',63),('2D',64),('2E',65),('1A',66),('1C',67),('1E',68),('1C',69),('3A',70),('1B',71),('2A',72),('2A',73),('3C',74),('1D',75),('3B',76),('3C',77),('3A',78),('1B',79),('1D',80),('1C',81),('1E',82),('1C',83),('3E',84),('2B',85),('2A',86),('3A',87),('3C',88),('1D',89),('2B',90),('3B',91),('1A',92),('1F',93),('2C',94),('2C',95),('1F',96),('1E',97),('1A',98),('2E',99),('3C',100),('3B',101),('3C',102),('2C',103),('2A',104),('2E',105),('2B',106),('3E',107),('3E',108),('3B',109),('1A',110),('3E',111),('3A',112),('1A',113),('1C',114),('2D',115),('3D',116),('2E',117),('3E',118),('2D',119)
 ```
 
-# Funkcje i procedury (sekcja robocza)
-
-```sql
--- funkcja dodaje nowego pracownika do naszej bazy,
--- poprzez dodanie do tabel Osoby, Pracownicy (i ewentualnie Przedmioty Nauczycieli) osoby o tym samym numerze ID
-
-GO
-CREATE PROC dbo.dodaj_pracownika
- 
-@Imie VARCHAR(255) = NULL,
-@Nazwisko VARCHAR(255) = NULL,
-@ID INT = NULL,
-@Numer VARCHAR(16),
-@Typ  VARCHAR(255) = NULL,
-@Przedmiot TINYINT = 0
- 
-AS
- 
-DECLARE @blad AS NVARCHAR(500);
- 
-IF @Imie IS NULL OR @Nazwisko IS NULL OR @ID IS NULL OR @Typ IS NULL
-OR (@Typ = 'Nauczyciel' AND @Przedmiot = 0)
-BEGIN
-     SET @blad = 'Błędne dane, sprawdź podane argumenty.';
-     RAISERROR(@blad, 16,1);
-     RETURN;
-END
- 
-INSERT INTO Osoby(Imie, Nazwisko)
-VALUES (@Imie, @Nazwisko);
-
-INSERT INTO Pracownicy(ID, [Numer Telefonu], Typ)
-VALUES(@ID, @Numer, @Typ)
-
--- jeśli to nauczyciel, to dokładamy jego przedmiot do danej tabeli
-IF @Typ = 'Nauczyciel'
-INSERT INTO [Przedmioty Nauczycieli](ID, Przedmiot)
-VALUES(@ID, @Przedmiot)
- 
-GO
-
--- przykładowe wywołanie powyższej funkcji, dodanie nauczyciela:
-
-DECLARE @cd INT
-SELECT @cd = COUNT(*) FROM Pracownicy
-SET @cd = @cd + 1
-
-EXEC dbo.dodaj_pracownika @Imie = 'Tomasz', @Nazwisko = 'Zaucha', 
-@Numer = '523456789', @ID = @cd, @Typ = 'Nauczyciel', @Przedmiot = 5
-GO
-```
-
-```sql
--- funkcja dodaje nowego ucznia do naszej bazy posiadającego swoje dane osobiste oraz klasę
-
-GO
-CREATE PROC dbo.dodaj_ucznia
- 
-@Imie VARCHAR(255) = NULL,
-@Nazwisko VARCHAR(255) = NULL,
-@ID INT = NULL,
-@Numer VARCHAR(16),
-@Klasa  VARCHAR(10) = NULL
-
-AS
- 
-DECLARE @blad AS NVARCHAR(500);
- 
-IF @Imie IS NULL OR @Nazwisko IS NULL OR @ID IS NULL OR @Klasa IS NULL
-
-BEGIN
-	SET @blad = 'Błędne dane, sprawdź podane argumenty.';
-	RAISERROR(@blad, 16,1);
-    RETURN;
-END
- 
-INSERT INTO Osoby(Imie, Nazwisko)
-VALUES (@Imie, @Nazwisko);
-
-INSERT INTO Uczniowie(ID, [Numer Telefonu Do Rodzica])
-VALUES(@ID, @Numer)
-
-INSERT INTO [Uczniowie Klas]([Nazwa Klasy], Uczen)
-VALUES(@Klasa, @ID)
-
-GO
-
--- przykładowe wywołanie powyższej funkcji (dodanie ucznia Tomka Mikulskiego z klasy 2A)
-
-DECLARE @cd INT
-SELECT @cd = COUNT(*) FROM Osoby
-SET @cd = @cd + 1
-
-EXEC dbo.dodaj_ucznia @Imie = 'Tomek', @Nazwisko = 'Mikulski', 
-@Numer = '123456789', @ID = @cd, @Klasa = '2A'
-GO
-```
+# Funkcje (sekcja robocza)
 
 ```sql
 
@@ -788,50 +844,4 @@ SELECT * FROM dbo.srednia_wazona(21, 'Język niemiecki')
 
 ```
 
-```sql
--- procedura dodająca ocenę uczniowi o danym ID
-GO
-CREATE PROC dbo.dodaj_ocene
- 
-@ID INT = NULL,
-@Ocena TINYINT = NULL,
-@Typ TINYINT = NULL,
-@Przedmiot TINYINT = NULL,
-@Opis TEXT = NULL,
-@Wpisujacy INT = NULL,
-@Kiedy DATETIME2 = NULL
-
-AS
- 
-DECLARE @blad AS NVARCHAR(500);
- 
-IF @ID IS NULL OR @Ocena IS NULL OR @Typ IS NULL
-OR @Przedmiot IS NULL OR @Wpisujacy IS NULL
-
-BEGIN
-	SET @blad = 'Błędne dane, sprawdź podane argumenty.';
-	RAISERROR(@blad, 16,1);
-    RETURN;
-END
-
-IF @Ocena > 6 OR @Ocena < 1
-
-BEGIN
-	SET @blad = 'Zła wartość oceny';
-	RAISERROR(@blad, 16,1);
-    RETURN;
-END
- 
-INSERT INTO Oceny(UczenID, Ocena, [Typ Oceny], Przedmiot, Opis, Wpisujacy, Kiedy)
-VALUES (@ID, @Ocena, @Typ, @Przedmiot, @Opis, @Wpisujacy, @Kiedy);
-
-GO
-
-
--- przykład, dodajemy uczniowi o ID = 21 ocenę 4 z podanymi innymi danymi:
-
-EXEC dbo.dodaj_ocene @ID = 21, @Ocena = 4, @Typ = 2, @Przedmiot = 3,
-@Opis = 'Opis oceny', @Wpisujacy = 2, @Kiedy = '2020-12-11'
-GO
-```
 # Typowe zapytania
