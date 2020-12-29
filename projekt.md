@@ -730,23 +730,24 @@ SELECT * FROM dbo.wypisz_typem('Administracja')
 ```
 
 ```sql
--- funkcja wypisująca ID, Imię, Nazwisko i Oceny (wraz z typem, wagą, oraz datą ich dodania) danego ucznia, którego ID podamy w argumencie
--- posortowane od najnowszych dat dodania (kolumna "kiedy")
+-- funkcja wypisująca ID, Imię, Nazwisko i Oceny (wraz z typem, wagą, nazwą przedmiotu oraz datą ich dodania) danego ucznia, którego ID podamy w argumencie
 
 GO
 CREATE FUNCTION dbo.wypisz_oceny (@ID AS INT)
 RETURNS TABLE
 
 AS
- 
-SELECT O.ID, O.Imie, O.Nazwisko, Oc.Ocena, T.Nazwa, T.Waga, Oc.Kiedy
+
+RETURN
+SELECT O.ID, O.Imie, O.Nazwisko, Oc.Ocena, T.Nazwa, T.Waga, S.[Nazwa Przedmiotu], Oc.Kiedy
 FROM Osoby O
 LEFT JOIN Oceny Oc
 ON Oc.UczenID = O.ID
 LEFT JOIN [Typ Ocen] T
 ON T.ID = Oc.[Typ Oceny]
+LEFT JOIN [Spis Przedmiotów] S
+ON S.ID = Oc.Przedmiot
 WHERE O.ID = @ID
-ORDER BY Kiedy DESC
 
 GO
 
@@ -754,6 +755,36 @@ GO
 -- przykładowe wywołanie funkcji, wypisujemy dane ucznia o ID = 21, wraz z jego ocenami:
 
 SELECT * FROM dbo.wypisz_oceny(21)
+
+```
+```sql
+-- funkcja obliczająca średnią ważoną ocen danego ucznia z danego przedmiotu 
+-- (argumenty to ID ucznia i nazwa przedmiotu)
+
+GO
+CREATE FUNCTION dbo.srednia_wazona (@ID AS INT, @Przedmiot AS NVARCHAR(255))
+RETURNS TABLE
+
+AS
+RETURN
+SELECT (1. * SUM(Ocena * W)/SUM(W)) as Srednia FROM
+(
+SELECT O.ID iden, O.Imie, O.Nazwisko, Oc.Ocena Ocena, T.Nazwa, T.Waga W, S.[Nazwa Przedmiotu] naz
+FROM (Osoby O
+LEFT JOIN Oceny Oc
+ON Oc.UczenID = O.ID
+LEFT JOIN [Typ Ocen] T
+ON T.ID = Oc.[Typ Oceny]
+LEFT JOIN [Spis Przedmiotów] S
+ON S.ID = OC.Przedmiot)
+) x
+WHERE (iden = @ID AND naz = @Przedmiot)
+GO
+
+
+-- przykład wyświetlający średnią ważoną ocen ucznia o ID = 21 z języka niemieckiego:
+
+SELECT * FROM dbo.srednia_wazona(21, 'Język niemiecki')
 
 ```
 
