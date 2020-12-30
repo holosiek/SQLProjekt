@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+body { font-family: 'Roboto', sans-serif; background: #111; padding: 0; margin: 0; }
+.header-div { display: flex; justify-content: center; box-shadow: 0 0 5px #000000ba; position: absolute; top: 0; left: 0; width: 100%; }
+.header-button { color: white; display: inline-block; flex-grow: 1; line-height: 24px; text-align: center; background-color: #222; transition: 0.2s background-color; user-select: none; cursor: pointer; padding: 10px 0; }
+.header-button:hover { background-color: #333 !important; }
+.header-main { user-select: none; border-right: 2px solid white; font-weight: 700; font-size: 20px; padding: 10px 0; flex-grow: 1; max-width: 300px; text-align: center; background: #1a1a1a; color: white; }
+
+.wrapper { top: 44px; position: relative; width: 100%; max-height: calc(100vh - 44px); overflow-y: auto; box-sizing: border-box; padding: 10px; }
+.wrapper::-webkit-scrollbar-track { background-color: rgba(0,0,0,0.25); }
+.wrapper::-webkit-scrollbar { width: 12px; background-color: rgba(0,0,0,0); }
+.wrapper::-webkit-scrollbar-thumb { background-color: #333; }
+
+.tab { color: #ccc; display: flex; justify-content: center; }
+
+#complains table { max-width: 1200px; width: 100%; border: 1px solid #1b1b1b }
+#complains th { border-bottom: 1px solid #292929; padding: 10px 0; background: #171717; }
+#complains td { padding: 10px 10px; }
+#complains tr:not(:last-child) td { border-bottom: 1px solid #171717; }
+#complains tr td:nth-child(2) { text-align: center; color: #888; }
+
+
+#grades table { max-width: 1200px; width: 100%; border: 1px solid #1b1b1b }
+#grades th { border-bottom: 1px solid #292929; padding: 10px 0; background: #171717; }
+#grades td { padding: 10px 10px; }
+#grades tr:not(:last-child) td { border-bottom: 1px solid #171717; }
+#grades tr th:nth-child(1) { word-wrap: break-word; width: 200px; }
+#grades tr td:nth-child(1) { text-align: center; word-wrap: break-word; width: 200px; }
+#grades tr td:nth-child(2) { color: #888; }
+
+.grade { user-select: none; position: relative; width: 10px; display: inline-block; margin: 5px; padding: 5px; background: #100e0e }
+.gradePower-1 { border-bottom: 2px solid #2d2d2d; }
+.gradePower-2 { border-bottom: 2px solid #2a792a; }
+.gradePower-3 { border-bottom: 2px solid #bb2727; }
+
+.grade .tooltiptext { line-height: 20px; font-size: 14px; visibility: hidden; width: 260px; background-color: #212121; box-shadow: 0 0 25px #0000008a; color: #fff; text-align: left; padding: 10px; box-sizing: border-box; border-radius: 6px; position: absolute; top: 30px; left: -120px; z-index: 1; }
+.grade:hover .tooltiptext { visibility: visible; }
