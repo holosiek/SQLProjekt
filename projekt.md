@@ -155,10 +155,10 @@ VALUES(@ID, @Przedmiot)
  
 GO
 
--- przykładowe wywołanie powyższej procedury, dodanie pracownika (nauczyciela):
+-- przykładowe wywołanie powyższej procedury, dodanie pracownika (nauczyciela) Tomasza Zauchę:
 
 DECLARE @cd INT
-SELECT @cd = COUNT(*) FROM Pracownicy
+SELECT @cd = COUNT(*) FROM Osoby
 SET @cd = @cd + 1
 
 EXEC dbo.dodaj_pracownika @Imie = 'Tomasz', @Nazwisko = 'Zaucha', 
@@ -284,6 +284,10 @@ GO
 
 ```
 ```sql
+IF OBJECT_ID('dodano_pracownika', 'TR') IS NOT NULL
+	DROP TRIGGER dodano_pracownika
+GO
+
 CREATE TRIGGER dodano_pracownika ON Pracownicy
 AFTER INSERT
 AS BEGIN
