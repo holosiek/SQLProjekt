@@ -787,6 +787,7 @@ GO
 -- przykładowe wywołanie funkcji (wypisanie danych ucznia o ID = 24):
 
 SELECT * FROM dbo.wyswietl_ucznia(24)
+```
 
 ```sql
 -- funkcja wypisuje pracowników o typie podanym w argumencie
