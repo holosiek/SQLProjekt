@@ -803,7 +803,7 @@ LEFT JOIN [Typ Ocen] T
 ON T.ID = Oc.[Typ Oceny]
 LEFT JOIN [Spis Przedmiotów] S
 ON S.ID = Oc.Przedmiot
-WHERE O.ID = @ID
+WHERE O.ID = @ID AND Oc.Ocena IS NOT NULL
 
 GO
 
