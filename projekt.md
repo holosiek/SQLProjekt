@@ -786,7 +786,7 @@ SELECT * FROM dbo.wypisz_typem('Administracja')
 ```
 
 ```sql
--- funkcja wypisująca ID, Imię, Nazwisko i Oceny (wraz z typem, wagą, nazwą przedmiotu oraz datą ich dodania) danego ucznia, którego ID podamy w argumencie
+-- funkcja wypisująca oceny ucznia o ID danym argumentem, wraz ze szczegółami danych ocen
 
 GO
 CREATE FUNCTION dbo.wypisz_oceny (@ID AS INT)
@@ -795,7 +795,8 @@ RETURNS TABLE
 AS
 
 RETURN
-SELECT O.ID, O.Imie, O.Nazwisko, Oc.Ocena, T.Nazwa, T.Waga, S.[Nazwa Przedmiotu], Oc.Kiedy
+SELECT Oc.Ocena [Typ Oceny], T.Nazwa, T.Waga, Oc.Opis, S.[Nazwa Przedmiotu], 
+Os.Imie [Imie Nauczyciela], Os.Nazwisko[Nazwisko Nauczyciela], Oc.Kiedy
 FROM Osoby O
 LEFT JOIN Oceny Oc
 ON Oc.UczenID = O.ID
@@ -803,6 +804,8 @@ LEFT JOIN [Typ Ocen] T
 ON T.ID = Oc.[Typ Oceny]
 LEFT JOIN [Spis Przedmiotów] S
 ON S.ID = Oc.Przedmiot
+LEFT JOIN Osoby Os
+ON Os.ID = Oc.Wpisujacy
 WHERE O.ID = @ID AND Oc.Ocena IS NOT NULL
 
 GO
