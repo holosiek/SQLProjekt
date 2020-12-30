@@ -847,5 +847,34 @@ GO
 SELECT * FROM dbo.srednia_wazona(21, 'Język niemiecki')
 
 ```
+```sql
+-- funkcja odpowiedzialna za wypisanie wszystkich uwag danego ucznia (którego ID podamy w argumencie) 
+-- wraz z jej opisem i danymi autora
+
+GO
+CREATE FUNCTION dbo.wypisz_uwagi (@ID AS INT)
+RETURNS TABLE
+
+AS
+ 
+RETURN
+SELECT O.Imie, O.Nazwisko, G.Opis [Opis Uwagi], 
+P.Imie [Imie Nauczyciela], P.Nazwisko [Nazwisko Nauczyciela]
+FROM Osoby O 
+LEFT JOIN Uczniowie U
+ON O.ID = U.ID
+LEFT JOIN Uwagi G
+ON O.ID = G.UczenID
+LEFT JOIN Osoby P
+ON G.Tworca = P.ID
+WHERE O.ID = @ID
+ 
+GO
+
+
+-- przykład wywołania funkcji, wypisze uwagi ucznia o ID = 23:
+
+SELECT * FROM dbo.wypisz_uwagi(23)
+```
 
 # Typowe zapytania
