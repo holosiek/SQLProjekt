@@ -766,7 +766,29 @@ INSERT INTO Oceny(UczenID, Ocena, [Typ Oceny], Przedmiot, Opis, Wpisujacy, Kiedy
 # Funkcje (sekcja robocza)
 
 ```sql
+-- funkcja wyświetlająca dane ucznia o ID danym argumentem
 
+GO
+CREATE FUNCTION dbo.wyswietl_ucznia (@ID AS INT)
+RETURNS TABLE
+
+AS
+ 
+RETURN
+SELECT O.Imie, O.Nazwisko, U.[Numer Telefonu Do Rodzica], K.[Nazwa Klasy]
+FROM Osoby O JOIN Uczniowie U 
+ON O.ID = U.ID
+JOIN [Uczniowie Klas] K
+ON U.ID = K.Uczen
+WHERE U.ID = @ID
+ 
+GO
+
+-- przykładowe wywołanie funkcji (wypisanie danych ucznia o ID = 24):
+
+SELECT * FROM dbo.wyswietl_ucznia(24)
+
+```sql
 -- funkcja wypisuje pracowników o typie podanym w argumencie
 GO
 CREATE FUNCTION dbo.wypisz_typem (@Typ AS VARCHAR(255))
