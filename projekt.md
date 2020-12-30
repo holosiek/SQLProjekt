@@ -72,7 +72,7 @@ Głównym celem projektu jest stworzenie bazy danych szkoły, która przechowywu
 -- wypisanie uczniów w kolejności klas (od 1A licząc), wewnątrz danej klasy sortujemy za nazwiskiem, a następnie za imieniem
 
 CREATE VIEW wyswietlanie_uczniow AS
-SELECT O.Imie, O.Nazwisko, U.[Numer Telefonu Do Rodzica], 'Uczeń' Typ, K.[Nazwa Klasy]
+SELECT O.Imie, O.Nazwisko, U.[Numer Telefonu Do Rodzica], K.[Nazwa Klasy]
 FROM Osoby O JOIN Uczniowie U 
 ON O.ID = U.ID
 JOIN [Uczniowie Klas] K
@@ -86,7 +86,7 @@ OFFSET 0 ROWS
 -- wyświetla nauczycieli: ich imiona, nazwiska, numery tel., typ (oczywiście 'nauczyciel')
 
 CREATE VIEW wyswietlanie_nauczycieli AS
-SELECT O.Imie, O.Nazwisko, P.[Numer Telefonu], 'Nauczyciel' Typ
+SELECT O.Imie, O.Nazwisko, P.[Numer Telefonu]
 FROM Osoby O LEFT JOIN Pracownicy P 
 ON O.ID = P.ID
 WHERE P.Typ = 'Nauczyciel'
@@ -119,13 +119,11 @@ OFFSET 0 ROWS
 ```sql
 -- procedura ta dodaje nowego pracownika do naszej bazy,
 -- poprzez dodanie do tabel Osoby, Pracownicy (i ewentualnie Przedmioty Nauczycieli) osoby o tym samym numerze ID
-
 GO
 CREATE PROC dbo.dodaj_pracownika
  
 @Imie VARCHAR(255) = NULL,
 @Nazwisko VARCHAR(255) = NULL,
-@ID INT = NULL,
 @Numer VARCHAR(16),
 @Typ  VARCHAR(255) = NULL,
 @Przedmiot TINYINT = 0
@@ -134,47 +132,45 @@ AS
  
 DECLARE @blad AS NVARCHAR(500);
  
-IF @Imie IS NULL OR @Nazwisko IS NULL OR @ID IS NULL OR @Typ IS NULL
+IF @Imie IS NULL OR @Nazwisko IS NULL OR @Typ IS NULL
 OR (@Typ = 'Nauczyciel' AND @Przedmiot = 0)
 BEGIN
      SET @blad = 'Błędne dane, sprawdź podane argumenty.';
      RAISERROR(@blad, 16,1);
      RETURN;
 END
- 
+
+DECLARE @cd INT
+SELECT @cd = COUNT(*) FROM Osoby
+SET @cd = @cd + 1
+
 INSERT INTO Osoby(Imie, Nazwisko)
 VALUES (@Imie, @Nazwisko);
 
 INSERT INTO Pracownicy(ID, [Numer Telefonu], Typ)
-VALUES(@ID, @Numer, @Typ)
+VALUES(@cd, @Numer, @Typ)
 
 -- jeśli to nauczyciel, to dokładamy jego przedmiot do danej tabeli
 IF @Typ = 'Nauczyciel'
 INSERT INTO [Przedmioty Nauczycieli](ID, Przedmiot)
-VALUES(@ID, @Przedmiot)
+VALUES(@cd, @Przedmiot)
  
 GO
 
--- przykładowe wywołanie powyższej procedury, dodanie pracownika (nauczyciela):
-
-DECLARE @cd INT
-SELECT @cd = COUNT(*) FROM Pracownicy
-SET @cd = @cd + 1
+-- przykładowe wywołanie powyższej procedury, dodanie pracownika (nauczyciela) Tomasza Zauchę:
 
 EXEC dbo.dodaj_pracownika @Imie = 'Tomasz', @Nazwisko = 'Zaucha', 
-@Numer = '523456789', @ID = @cd, @Typ = 'Nauczyciel', @Przedmiot = 5
+@Numer = '523456789', @Typ = 'Nauczyciel', @Przedmiot = 5
 GO
 ```
 
 ```sql
 -- procedura dodaje nowego ucznia do naszej bazy posiadającego swoje dane osobiste oraz klasę
 
-GO
 CREATE PROC dbo.dodaj_ucznia
  
 @Imie VARCHAR(255) = NULL,
 @Nazwisko VARCHAR(255) = NULL,
-@ID INT = NULL,
 @Numer VARCHAR(16),
 @Klasa  VARCHAR(10) = NULL
 
@@ -182,7 +178,7 @@ AS
  
 DECLARE @blad AS NVARCHAR(500);
  
-IF @Imie IS NULL OR @Nazwisko IS NULL OR @ID IS NULL OR @Klasa IS NULL
+IF @Imie IS NULL OR @Nazwisko IS NULL OR @Klasa IS NULL
 
 BEGIN
 	SET @blad = 'Błędne dane, sprawdź podane argumenty.';
@@ -190,26 +186,27 @@ BEGIN
     RETURN;
 END
  
+DECLARE @cd INT
+SELECT @cd = COUNT(*) FROM Osoby
+SET @cd = @cd + 1
+
 INSERT INTO Osoby(Imie, Nazwisko)
 VALUES (@Imie, @Nazwisko);
 
 INSERT INTO Uczniowie(ID, [Numer Telefonu Do Rodzica])
-VALUES(@ID, @Numer)
+VALUES(@cd, @Numer)
 
 INSERT INTO [Uczniowie Klas]([Nazwa Klasy], Uczen)
-VALUES(@Klasa, @ID)
+VALUES(@Klasa,@cd)
 
 GO
 
 -- przykładowe wywołanie powyższej procedury (dodanie ucznia Tomka Mikulskiego z klasy 2A)
 
-DECLARE @cd INT
-SELECT @cd = COUNT(*) FROM Osoby
-SET @cd = @cd + 1
-
 EXEC dbo.dodaj_ucznia @Imie = 'Tomek', @Nazwisko = 'Mikulski', 
-@Numer = '123456789', @ID = @cd, @Klasa = '2A'
+@Numer = '123456789', @Klasa = '2A'
 GO
+
 ```
 
 ```sql
@@ -222,8 +219,7 @@ CREATE PROC dbo.dodaj_ocene
 @Typ TINYINT = NULL,
 @Przedmiot TINYINT = NULL,
 @Opis TEXT = NULL,
-@Wpisujacy INT = NULL,
-@Kiedy DATETIME2 = NULL
+@Wpisujacy INT = NULL
 
 AS
  
@@ -247,15 +243,15 @@ BEGIN
 END
  
 INSERT INTO Oceny(UczenID, Ocena, [Typ Oceny], Przedmiot, Opis, Wpisujacy, Kiedy)
-VALUES (@ID, @Ocena, @Typ, @Przedmiot, @Opis, @Wpisujacy, @Kiedy);
+VALUES (@ID, @Ocena, @Typ, @Przedmiot, @Opis, @Wpisujacy, GETDATE());
 
 GO
 
 
--- przykład, dodajemy uczniowi o ID = 21 ocenę 4 z podanymi innymi danymi:
+-- przykład, dodajemy uczniowi o ID = 21 ocenę 4 z podanymi innymi danymi, daty nie trzeba podawać:
 
 EXEC dbo.dodaj_ocene @ID = 21, @Ocena = 4, @Typ = 2, @Przedmiot = 3,
-@Opis = 'Opis oceny', @Wpisujacy = 2, @Kiedy = '2020-12-11'
+@Opis = 'Opis oceny', @Wpisujacy = 2
 GO
 ```
 
@@ -284,6 +280,10 @@ GO
 
 ```
 ```sql
+IF OBJECT_ID('dodano_pracownika', 'TR') IS NOT NULL
+	DROP TRIGGER dodano_pracownika
+GO
+
 CREATE TRIGGER dodano_pracownika ON Pracownicy
 AFTER INSERT
 AS BEGIN
@@ -789,7 +789,7 @@ SELECT * FROM dbo.wypisz_typem('Administracja')
 ```
 
 ```sql
--- funkcja wypisująca ID, Imię, Nazwisko i Oceny (wraz z typem, wagą, nazwą przedmiotu oraz datą ich dodania) danego ucznia, którego ID podamy w argumencie
+-- funkcja wypisująca oceny ucznia o ID danym argumentem, wraz ze szczegółami danych ocen
 
 GO
 CREATE FUNCTION dbo.wypisz_oceny (@ID AS INT)
@@ -798,7 +798,8 @@ RETURNS TABLE
 AS
 
 RETURN
-SELECT O.ID, O.Imie, O.Nazwisko, Oc.Ocena, T.Nazwa, T.Waga, S.[Nazwa Przedmiotu], Oc.Kiedy
+SELECT Oc.Ocena [Typ Oceny], T.Nazwa, T.Waga, Oc.Opis, S.[Nazwa Przedmiotu], 
+Os.Imie [Imie Nauczyciela], Os.Nazwisko[Nazwisko Nauczyciela], Oc.Kiedy
 FROM Osoby O
 LEFT JOIN Oceny Oc
 ON Oc.UczenID = O.ID
@@ -806,7 +807,9 @@ LEFT JOIN [Typ Ocen] T
 ON T.ID = Oc.[Typ Oceny]
 LEFT JOIN [Spis Przedmiotów] S
 ON S.ID = Oc.Przedmiot
-WHERE O.ID = @ID
+LEFT JOIN Osoby Os
+ON Os.ID = Oc.Wpisujacy
+WHERE O.ID = @ID AND Oc.Ocena IS NOT NULL
 
 GO
 
@@ -845,6 +848,35 @@ GO
 
 SELECT * FROM dbo.srednia_wazona(21, 'Język niemiecki')
 
+```
+```sql
+-- funkcja odpowiedzialna za wypisanie wszystkich uwag danego ucznia (którego ID podamy w argumencie) 
+-- wraz z jej opisem i danymi autora
+
+GO
+CREATE FUNCTION dbo.wypisz_uwagi (@ID AS INT)
+RETURNS TABLE
+
+AS
+ 
+RETURN
+SELECT O.Imie, O.Nazwisko, G.Opis [Opis Uwagi], 
+P.Imie [Imie Nauczyciela], P.Nazwisko [Nazwisko Nauczyciela]
+FROM Osoby O 
+LEFT JOIN Uczniowie U
+ON O.ID = U.ID
+LEFT JOIN Uwagi G
+ON O.ID = G.UczenID
+LEFT JOIN Osoby P
+ON G.Tworca = P.ID
+WHERE O.ID = @ID
+ 
+GO
+
+
+-- przykład wywołania funkcji, wypisze uwagi ucznia o ID = 23:
+
+SELECT * FROM dbo.wypisz_uwagi(23)
 ```
 
 # Typowe zapytania
