@@ -48,10 +48,16 @@ function gotProfile(data){
 
 function properTime(time){
     if(Number(time[1])+45 >= 60){
-        console.log(time)
         return (Number(time[0])+1) + ":" + (Number(time[1])-15)
     }
     return time[0] + ":" + (Number(time[1])+45)
+}
+
+function isValid(data){
+    if(data != null){
+        return JSON.stringify(data);
+    }
+    return ""
 }
 
 function gotSchedule(data){
@@ -59,10 +65,19 @@ function gotSchedule(data){
     if(data != ""){
         decodeData = JSON.parse(data);
         console.log(data)
+        subjects = [{},{},{},{},{}]
+        for(var i=0; i<decodeData["Godziny"].length; i++){
+            for(var j=0; j<5; j++){
+                subjects[j][i] = null
+            }
+        }
+        for(var i=0; i<decodeData["Zajecia"].length; i++){
+            subjects[Number(decodeData["Zajecia"][i]["Dzien"])-1][Number(decodeData["Zajecia"][i]["Kiedy"])] = decodeData["Zajecia"][i]
+        }
         for(var i=0; i<decodeData["Godziny"].length; i++){
             var hourTime = decodeData["Godziny"][i]["Od Kiedy"].split(":")
             hourTimeStr = decodeData["Godziny"][i]["Od Kiedy"] + "-" + properTime(hourTime)
-            prep += "<tr><td>" + hourTimeStr + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td></tr>"
+            prep += "<tr><td>" + hourTimeStr + "</td><td>" + isValid(subjects[0][i]) + "</td><td>" + isValid(subjects[1][i]) + "</td><td>" + isValid(subjects[2][i]) + "</td><td>" + isValid(subjects[3][i]) + "</td><td>" + isValid(subjects[4][i]) + "</td></tr>"
         }
     }
     document.getElementById('schedule').innerHTML = prep+"</table>";

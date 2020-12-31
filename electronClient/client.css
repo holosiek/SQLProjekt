@@ -45,4 +45,4 @@ body { font-family: 'Roboto', sans-serif; background: #111; padding: 0; margin: 
 #schedule tr:not(:last-child) td { border-bottom: 1px solid #171717; }
 #schedule tr th:nth-child(1) { word-wrap: break-word; width: 200px; }
 #schedule tr td:nth-child(1) { text-align: center; word-wrap: break-word; width: 100px; color: #888 }
-#schedule tr td:not(:nth-child(1)) { width: 20%; border-left: 1px solid #151515; }
+#schedule tr td:not(:nth-child(1)) { width: 20%; word-break: break-word; border-left: 1px solid #151515; }

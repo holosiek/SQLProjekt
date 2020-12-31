@@ -26,10 +26,11 @@ function createWindow(){
 
 const StudentID = "21"
 const ProfileQuery = "SELECT * FROM dbo.wyswietl_ucznia("+StudentID+")";
-const ScheduleQuery = "SELECT [ID] ,[Od Kiedy] FROM [SzkolaDB].[dbo].[Czas Zajec]"
-const GradesQuery = "SELECT * FROM dbo.wypisz_oceny("+StudentID+")"
-const GradesQuery2 = "SELECT [Nazwa Przedmiotu] FROM [SzkolaDB].[dbo].[Spis Przedmiotów]"
-const ComplainsQuery = "SELECT * FROM dbo.wypisz_uwagi("+StudentID+")"
+const ScheduleQuery = "SELECT [ID] ,[Od Kiedy] FROM [SzkolaDB].[dbo].[Czas Zajec]";
+const ScheduleQuery2 = "SELECT [Przedmiot], [Nauczyciel], [Klasa], [Dzien], [Kiedy], [Sala] FROM [SzkolaDB].[dbo].[Plan Zajec] WHERE Klasa='1A'";
+const GradesQuery = "SELECT * FROM dbo.wypisz_oceny("+StudentID+")";
+const GradesQuery2 = "SELECT [Nazwa Przedmiotu] FROM [SzkolaDB].[dbo].[Spis Przedmiotów]";
+const ComplainsQuery = "SELECT * FROM dbo.wypisz_uwagi("+StudentID+")";
 
 function GetProfileData(event){
 	pool.connect().then(()=>{
@@ -50,7 +51,15 @@ function GetScheduleData(event){
 		pool.request().query(ScheduleQuery, (err, result) => {
 			if(result != undefined){
                 res["Godziny"] = result.recordset;
-				event.sender.send('update-schedule-callback', JSON.stringify(res));
+				pool.request().query(ScheduleQuery2, (err2, result2) => {
+                    if(result != undefined){
+                        res["Zajecia"] = result2.recordset;
+                        event.sender.send('update-schedule-callback', JSON.stringify(res));
+                    } else {
+                        event.sender.send('update-schedule-callback', "");
+                        console.log(err2)
+                    }
+                })
 			} else {
 				event.sender.send('update-schedule-callback', "");
 				console.log(err)
