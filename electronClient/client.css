@@ -34,3 +34,15 @@ body { font-family: 'Roboto', sans-serif; background: #111; padding: 0; margin: 
 
 .grade .tooltiptext { line-height: 20px; font-size: 14px; visibility: hidden; width: 260px; background-color: #212121; box-shadow: 0 0 25px #0000008a; color: #fff; text-align: left; padding: 10px; box-sizing: border-box; border-radius: 6px; position: absolute; top: 30px; left: -120px; z-index: 1; }
 .grade:hover .tooltiptext { visibility: visible; }
+
+#profile-name { padding: 5px 0; margin: 5px 0 0 0; font-size: 20px; color: white; }
+#profile-class { font-size: 17px; margin-left: 5px; display: inline-block; color: #7689bf; font-weight: 700; }
+#profile-telephone { font-size: 12px; }
+
+#schedule table { table-layout: fixed; max-width: 1200px; width: 100%; border: 1px solid #1b1b1b }
+#schedule th { border-bottom: 1px solid #292929; padding: 10px 0; background: #171717; }
+#schedule td { padding: 10px 10px; }
+#schedule tr:not(:last-child) td { border-bottom: 1px solid #171717; }
+#schedule tr th:nth-child(1) { word-wrap: break-word; width: 200px; }
+#schedule tr td:nth-child(1) { text-align: center; word-wrap: break-word; width: 100px; color: #888 }
+#schedule tr td:not(:nth-child(1)) { width: 20%; border-left: 1px solid #151515; }

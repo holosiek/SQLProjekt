@@ -25,8 +25,8 @@ function createWindow(){
 //--------------------------------------------------------------
 
 const StudentID = "21"
-const ProfileQuery = "SELECT * FROM wyswietlanie_uczniow";
-//const ScheduleQuery = "SELECT * FROM dbo.wypisz_uwagi("+StudentID+")"
+const ProfileQuery = "SELECT * FROM dbo.wyswietl_ucznia("+StudentID+")";
+const ScheduleQuery = "SELECT [ID] ,[Od Kiedy] FROM [SzkolaDB].[dbo].[Czas Zajec]"
 const GradesQuery = "SELECT * FROM dbo.wypisz_oceny("+StudentID+")"
 const GradesQuery2 = "SELECT [Nazwa Przedmiotu] FROM [SzkolaDB].[dbo].[Spis Przedmiotów]"
 const ComplainsQuery = "SELECT * FROM dbo.wypisz_uwagi("+StudentID+")"
@@ -38,13 +38,29 @@ function GetProfileData(event){
 				event.sender.send('update-profile-callback', JSON.stringify(result.recordset));
 			} else {
 				event.sender.send('update-profile-callback', "");
+				console.log(err)
+			}
+		})
+	})
+}
+
+function GetScheduleData(event){
+	res = {'Godziny':[],'Zajecia':[],'Dni Wolne':[]}
+	pool.connect().then(()=>{
+		pool.request().query(ScheduleQuery, (err, result) => {
+			if(result != undefined){
+                res["Godziny"] = result.recordset;
+				event.sender.send('update-schedule-callback', JSON.stringify(res));
+			} else {
+				event.sender.send('update-schedule-callback', "");
+				console.log(err)
 			}
 		})
 	})
 }
 
 function GetGradesData(event){
-	res = {'Nazwy przedmiotow':[],'Oceny':[]}
+	res = {'Nazwy Przedmiotow':[],'Oceny':[]}
 	pool.connect().then(()=>{
 		pool.request().query(GradesQuery, (err, result) => {
 			if(result != undefined){
@@ -55,10 +71,12 @@ function GetGradesData(event){
 						event.sender.send('update-grades-callback', JSON.stringify(res));
 					} else {
 						event.sender.send('update-grades-callback', "");
+                        console.log(err2)
 					}
 				})
 			} else {
 				event.sender.send('update-grades-callback', "");
+				console.log(err)
 			}
 		})
 	})
@@ -71,6 +89,7 @@ function GetComplainsData(event){
 				event.sender.send('update-complains-callback', JSON.stringify(result.recordset));
 			} else {
 				event.sender.send('update-complains-callback', "");
+				console.log(err)
 			}
 		})
 	})
@@ -83,7 +102,7 @@ ipc.on('update-profile', (event, arg) => {
 })
 
 ipc.on('update-schedule', (event, arg) => {
-	GetProfileData(event);
+	GetScheduleData(event);
 })
 
 ipc.on('update-grades', (event, arg) => {

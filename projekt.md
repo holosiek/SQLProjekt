@@ -335,7 +335,7 @@ CREATE TABLE [Typ Ocen] (
 -- Stworzenie tabeli Czas Zajec
 CREATE TABLE [Czas Zajec] (
     ID TINYINT IDENTITY(1,1) PRIMARY KEY,
-    [Od Kiedy] TIME
+    [Od Kiedy] VARCHAR(20)
 )
 -- Stworzenie tabeli Sale
 CREATE TABLE Sale (
@@ -821,7 +821,7 @@ RETURNS TABLE
 AS
 
 RETURN
-SELECT Oc.Ocena [Typ Oceny], T.Nazwa, T.Waga, Oc.Opis, S.[Nazwa Przedmiotu], 
+SELECT Oc.Ocena [Ocena], T.Nazwa, T.Waga, Oc.Opis, S.[Nazwa Przedmiotu], 
 Os.Imie [Imie Nauczyciela], Os.Nazwisko[Nazwisko Nauczyciela], Oc.Kiedy
 FROM Osoby O
 LEFT JOIN Oceny Oc

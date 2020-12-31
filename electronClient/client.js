@@ -37,36 +37,52 @@ function turnOnTab(tab){
 //---------------------------------------------------------------
 
 function gotProfile(data){
-    document.getElementById('profile').innerHTML = data;
+    if(data != ""){
+        decodeData = JSON.parse(data);
+        console.log(data)
+        document.getElementById('profile-name').innerHTML = decodeData[0]["Imie"] + " " + decodeData[0]["Nazwisko"] + "<div id='profile-class'>" + decodeData[0]["Nazwa Klasy"] + "</div>";
+        document.getElementById('profile-telephone').innerHTML = decodeData[0]["Numer Telefonu Do Rodzica"];
+    }
     turnOnTab("profile");
 }
 
 function gotSchedule(data){
-    document.getElementById('schedule').innerHTML = data;
+    prep = "<table><tr><th></th><th>Poniedziałek</th><th>Wtorek</th><th>Środa</th><th>Czwartek</th><th>Piątek</th></tr>";
+    if(data != ""){
+        decodeData = JSON.parse(data);
+        console.log(data)
+        for(var i=0; i<decodeData["Godziny"].length; i++){
+            var godzina = decodeData["Godziny"][i]["Od Kiedy"]
+            prep += "<tr><td>" + godzina + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td></tr>"
+        }
+    }
+    document.getElementById('schedule').innerHTML = prep+"</table>";
     turnOnTab("schedule");
 }
 
 function gotGrades(data){
-    decodeData = JSON.parse(data);
     grades = {}
     prep = "<table><tr><th>Nazwa Przedmiotu</th><th>Oceny</th></tr>";
-    console.log(data)
     if(data != ""){
+        decodeData = JSON.parse(data);
+        console.log(data)
         for(var i=0; i<decodeData["Nazwy Przedmiotow"].length; i++){
             grades[decodeData["Nazwy Przedmiotow"][i]["Nazwa Przedmiotu"]] = []
-        } 
-        for(var i=0; i<decodeData["Oceny"].length; i++){
-            var klasa = "gradePower-" + decodeData["Oceny"][i]["Waga"];
-            grades[decodeData["Oceny"][i]["Nazwa Przedmiotu"]].push(
-                "<div class='grade "+klasa+"'>"+decodeData["Oceny"][i]["Ocena"]+
-                "<span class='tooltiptext'>Typ: "+
-                decodeData["Oceny"][i]["Nazwa"]+"<br>Waga: "+
-                decodeData["Oceny"][i]["Waga"]+"<br>Kiedy: "+
-                decodeData["Oceny"][i]["Kiedy"].replace('T', ' ').replace('Z', '').split(".")[0]+"<br>Wpisał: "+
-                decodeData["Oceny"][i]["Imie"]+" "+decodeData["Oceny"][i]["Nazwisko"]+
-                "</span></div>"
-            )
-        } 
+        }
+        if(decodeData["Oceny"][0]["Nazwa Przedmiotu"] != null){
+            for(var i=0; i<decodeData["Oceny"].length; i++){
+                var klasa = "gradePower-" + decodeData["Oceny"][i]["Waga"];
+                grades[decodeData["Oceny"][i]["Nazwa Przedmiotu"]].push(
+                    "<div class='grade "+klasa+"'>"+decodeData["Oceny"][i]["Ocena"]+
+                    "<span class='tooltiptext'>Typ: "+
+                    decodeData["Oceny"][i]["Nazwa"]+"<br>Waga: "+
+                    decodeData["Oceny"][i]["Waga"]+"<br>Kiedy: "+
+                    decodeData["Oceny"][i]["Kiedy"].replace('T', ' ').replace('Z', '').split(".")[0]+"<br>Wpisał: "+
+                    decodeData["Oceny"][i]["Imie Nauczyciela"]+" "+decodeData["Oceny"][i]["Nazwisko Nauczyciela"]+
+                    "</span></div>"
+                )
+            } 
+        }
         for(var i=0; i<decodeData["Nazwy Przedmiotow"].length; i++){
             var nazwa = decodeData["Nazwy Przedmiotow"][i]["Nazwa Przedmiotu"]
             prep += "<tr><td>" + nazwa + "</td><td>" + grades[nazwa].join('') + "</td></tr>"
@@ -78,12 +94,18 @@ function gotGrades(data){
 
 function gotComplains(data){
     decodeData = JSON.parse(data);
-    if(data != "" && decodeData[0]["Opis Uwagi"] != null){
-        prep = "<table><tr><th>Opis</th><th>Wystawił</th></tr>";
-        for(var i=0; i<decodeData.length; i++){
-            prep += "<tr><td>"+decodeData[i]["Opis Uwagi"]+"</td><td>"+decodeData[i]["Imie Nauczyciela"]+" "+decodeData[i]["Nazwisko Nauczyciela"]+"</td></tr>";
+    if(data != ""){
+        decodeData = JSON.parse(data);
+        console.log(data)
+        if(decodeData[0]["Opis Uwagi"] != null){
+            prep = "<table><tr><th>Opis</th><th>Wystawił</th></tr>";
+            for(var i=0; i<decodeData.length; i++){
+                prep += "<tr><td>"+decodeData[i]["Opis Uwagi"]+"</td><td>"+decodeData[i]["Imie Nauczyciela"]+" "+decodeData[i]["Nazwisko Nauczyciela"]+"</td></tr>";
+            }
+            document.getElementById('complains').innerHTML = prep+"</table>";
+        } else {
+            document.getElementById('complains').innerHTML = "<div class='complains-nothing'>Nie masz uwag :D</div>";
         }
-        document.getElementById('complains').innerHTML = prep+"</table>";
     } else {
         document.getElementById('complains').innerHTML = "<div class='complains-nothing'>Nie masz uwag :D</div>";
     }
