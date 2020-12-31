@@ -113,6 +113,18 @@ ORDER BY CASE WHEN Typ = 'Dyrektor' THEN 1
 OFFSET 0 ROWS
 
 ```
+```sql
+-- widok przedstawia sumę godzinową urlopów każdego z pracowników (od pracownika, który tych urlopów ma godzinowo najmniej, do tego, który ma najwięcej)
+
+CREATE VIEW urlopy_pracownikow AS
+SELECT O.Imie, O.Nazwisko,SUM(DATEDIFF(hour, U.Od ,U.do)) [Suma urlopów (w godzinach)]
+FROM Urlopy U
+JOIN Osoby O
+ON U.[ID Pracownika] = O.ID
+GROUP BY IMIE, Nazwisko
+ORDER BY SUM(DATEDIFF(hour, U.Od ,U.do)) DESC
+OFFSET 0 ROWS
+```
 
 # Opis procedur składowych
 
