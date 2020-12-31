@@ -46,14 +46,23 @@ function gotProfile(data){
     turnOnTab("profile");
 }
 
+function properTime(time){
+    if(Number(time[1])+45 >= 60){
+        console.log(time)
+        return (Number(time[0])+1) + ":" + (Number(time[1])-15)
+    }
+    return time[0] + ":" + (Number(time[1])+45)
+}
+
 function gotSchedule(data){
     prep = "<table><tr><th></th><th>Poniedziałek</th><th>Wtorek</th><th>Środa</th><th>Czwartek</th><th>Piątek</th></tr>";
     if(data != ""){
         decodeData = JSON.parse(data);
         console.log(data)
         for(var i=0; i<decodeData["Godziny"].length; i++){
-            var godzina = decodeData["Godziny"][i]["Od Kiedy"]
-            prep += "<tr><td>" + godzina + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td></tr>"
+            var hourTime = decodeData["Godziny"][i]["Od Kiedy"].split(":")
+            hourTimeStr = decodeData["Godziny"][i]["Od Kiedy"] + "-" + properTime(hourTime)
+            prep += "<tr><td>" + hourTimeStr + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td><td>" + "" + "</td></tr>"
         }
     }
     document.getElementById('schedule').innerHTML = prep+"</table>";
