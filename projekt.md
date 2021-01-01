@@ -21,7 +21,7 @@
 + 8 poprawnie zaprojektowanych tabel (na osobę), przy czym w bazie danych powinno być minimum 10 tabel,
 + baza powinna zawierać dane dotyczące atrybutów, których wartość zmienia się w czasie,
 + baza powinna zawierać tabele realizujące jeden ze schematów dziedziczenia,
-- 10 widoków lub funkcji,
++ 10 widoków lub funkcji,
 - baza danych powinna być odpowiednio oprogramowana z wykorzystaniem procedur składowanych i wyzwalaczy (co najmniej po 5 procedur i po 5 wyzwalaczy).
 + należy zaprojektować strategię pielęgnacji bazy danych (kopie zapasowe),
 - można utworzyć dwa programy klienckie: jeden umożliwiający pracę administratorską (użytkowników ze zwiększonymi uprawnieniami), drugi umożliwiający pracę zwykłych użytkowników.
@@ -229,6 +229,41 @@ EXEC dbo.dodaj_ucznia @Imie = 'Tomek', @Nazwisko = 'Mikulski',
 @Numer = '123456789', @Klasa = '2A'
 GO
 
+```
+```sql
+-- procedura wstawiania uwagi, jako argumenty podajemy ID ucznia, opis uwagi oraz ID twórcy (pracownika) wstawiającego uwagę
+-- zwracanie błędu, gdy: jakikolwiek argument jest NULLem LUB gdy ID ucznia lub pracownika jest niepoprawne (nieistnieje w bazie)
+
+GO
+CREATE PROC dbo.dodaj_uwage
+ 
+@ID INT = NULL,
+@Opis TEXT = NULL,
+@Tworca INT = NULL
+ 
+AS
+ 
+DECLARE @blad AS NVARCHAR(500);
+ 
+IF @ID IS NULL OR @Opis IS NULL OR @Tworca IS NULL OR 
+@ID NOT IN (SELECT ID FROM Uczniowie) OR @Tworca NOT IN (SELECT ID FROM Pracownicy)
+BEGIN
+     SET @blad = 'Błędne dane, sprawdź podane argumenty.';
+     RAISERROR(@blad, 16,1);
+     RETURN;
+END
+
+INSERT INTO Uwagi
+VALUES (@ID, @Opis, @Tworca)
+
+GO
+
+
+-- przykład:
+
+EXEC dbo.dodaj_uwage @ID = 26, @Opis = 'Naganne zachowania ucznia podczas lekcji', 
+@Tworca = 8
+GO
 ```
 
 ```sql
