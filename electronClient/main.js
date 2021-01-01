@@ -26,8 +26,9 @@ function createWindow(){
 
 const StudentID = "21"
 const ProfileQuery = "SELECT * FROM dbo.wyswietl_ucznia("+StudentID+")";
-const ScheduleQuery = "SELECT [ID] ,[Od Kiedy] FROM [SzkolaDB].[dbo].[Czas Zajec]";
-const ScheduleQuery2 = "SELECT [Przedmiot], [Nauczyciel], [Klasa], [Dzien], [Kiedy], [Sala] FROM [SzkolaDB].[dbo].[Plan Zajec] WHERE Klasa='1A'";
+const ScheduleQuery = "SELECT [ID], [Od Kiedy] FROM [SzkolaDB].[dbo].[Czas Zajec]";
+const ScheduleQuery2 = "SELECT * FROM dbo.plan_lekcji('1A')";
+const ScheduleQuery3 = "SELECT [Kiedy] FROM [SzkolaDB].[dbo].[Dni Wolne]"
 const GradesQuery = "SELECT * FROM dbo.wypisz_oceny("+StudentID+")";
 const GradesQuery2 = "SELECT [Nazwa Przedmiotu] FROM [SzkolaDB].[dbo].[Spis Przedmiotów]";
 const ComplainsQuery = "SELECT * FROM dbo.wypisz_uwagi("+StudentID+")";
@@ -52,9 +53,17 @@ function GetScheduleData(event){
 			if(result != undefined){
                 res["Godziny"] = result.recordset;
 				pool.request().query(ScheduleQuery2, (err2, result2) => {
-                    if(result != undefined){
+                    if(result2 != undefined){
                         res["Zajecia"] = result2.recordset;
-                        event.sender.send('update-schedule-callback', JSON.stringify(res));
+                        pool.request().query(ScheduleQuery3, (err3, result3) => {
+                            if(result3 != undefined){
+                                res["Dni Wolne"] = result3.recordset;
+                                event.sender.send('update-schedule-callback', JSON.stringify(res));
+                            } else {
+                                event.sender.send('update-schedule-callback', "");
+                                console.log(err3)
+                            }
+                        })
                     } else {
                         event.sender.send('update-schedule-callback', "");
                         console.log(err2)
@@ -65,7 +74,7 @@ function GetScheduleData(event){
 				console.log(err)
 			}
 		})
-	})
+    })
 }
 
 function GetGradesData(event){

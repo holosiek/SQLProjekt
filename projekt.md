@@ -62,11 +62,19 @@ Ograniczyliśmy projekt do podstaw, tzw. Dane przykładowe są podane tylko dla 
 
 # Diagram ER
 
+> do wklejenia z pdf i do zaktualizowania po ukończeniu projektu
+
 # Schemat Bazy Danych
+
+> tak jak wyżej
 
 # Dodatkowe Więzy intergralności danych
 
+> tak jak wyżej
+
 # Utworzone indeksy
+
+> tak jak wyżej
 
 # Opis stworzonych widoków
 
@@ -918,5 +926,32 @@ GO
 
 SELECT * FROM dbo.wypisz_uwagi(23)
 ```
+```sql
+USE SzkolaDB;
+-- funkcja wypisuje plan lekcji danej klasy wraz z nazwami przedmiotów
+GO
+CREATE FUNCTION dbo.plan_lekcji (@Klasa AS VARCHAR(10))
+RETURNS TABLE
+
+AS
+ 
+RETURN
+SELECT SP.[Nazwa Przedmiotu] [Przedmiot], O.Imie [Imie Nauczyciela], O.Nazwisko [Nazwisko Nauczyciela], PZ.Nauczyciel, PZ.Dzien, PZ.Kiedy, PZ.Sala
+FROM SzkolaDB.dbo.[Plan Zajec] PZ
+JOIN SzkolaDB.dbo.[Spis Przedmiotów] SP
+ON PZ.Przedmiot = SP.ID
+JOIN SzkolaDB.dbo.[Osoby] O
+ON PZ.Nauczyciel = O.ID
+WHERE Klasa = @Klasa
+ 
+GO
+
+
+-- przykładowe wywołanie powyższej funkcji:
+
+SELECT * FROM dbo.plan_lekcji('1A')
+```
 
 # Typowe zapytania
+
+> tak jak wyżej
