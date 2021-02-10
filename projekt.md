@@ -66,15 +66,7 @@ Ograniczyliśmy projekt do podstaw, tzw. Dane przykładowe są podane tylko dla 
 
 # Schemat Bazy Danych
 
-> tak jak wyżej
-
-# Dodatkowe Więzy intergralności danych
-
-> tak jak wyżej
-
-# Utworzone indeksy
-
-> tak jak wyżej
+![DiagramER](schematRelacji.png)
 
 # Opis stworzonych widoków
 
