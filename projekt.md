@@ -62,7 +62,7 @@ Ograniczyliśmy projekt do podstaw, tzw. Dane przykładowe są podane tylko dla 
 
 # Diagram ER
 
-> do wklejenia z pdf i do zaktualizowania po ukończeniu projektu
+![DiagramER](DiagramER.png)
 
 # Schemat Bazy Danych
 
