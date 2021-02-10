@@ -312,6 +312,39 @@ EXEC dbo.dodaj_ocene @ID = 21, @Ocena = 4, @Typ = 2, @Przedmiot = 3,
 GO
 ```
 
+```sql
+-- procedura dodawania dnia wolnego, jako argument podajemy datetime
+-- zwracanie błędu, gdy: podany datetime istnieje
+
+USE SzkolaDB
+GO
+CREATE PROC dbo.dodaj_dzien_wolny
+
+@Kiedy DATETIME
+ 
+AS
+ 
+DECLARE @blad AS NVARCHAR(500);
+ 
+IF @Kiedy IN (SELECT * FROM dbo.[Dni Wolne])
+BEGIN
+     SET @blad = 'Podana data istnieje juz w tabeli dni wolnych.';
+     RAISERROR(@blad, 17, 1);
+     RETURN;
+END
+
+INSERT INTO dbo.[Dni Wolne]
+VALUES (@Kiedy)
+
+GO
+
+
+-- przykład:
+
+EXEC dbo.dodaj_dzien_wolny @Kiedy = '2007-05-08 12:35:29'
+GO
+```
+
 # Opis wyzwalaczy
 
 Proste przykładowe wyzwalacze. Głównie informują o zdarzeniach zrealizowanych przez użytkownika, takich jak np. dodanie nowego ucznia (poprzez automatyczne wypisanie komunikatu - brak wymagań szczegółowych w zasadach projektu). Dodatkowo wyświetlany jest komunikat o liczebności danej tabeli (np. o aktualnej liczbie uczniów w bazie) Podobna realizacja dostępna była w niektórych starszych wersjach dzienników elektronicznych. Oczywiście bardziej szczegółowy opis będzie napisany na końcu. \
