@@ -366,6 +366,30 @@ SELECT 'POMYŚLNIE DODANO NOWĄ OCENĘ'
 END
 GO
 ```
+```sql
+IF OBJECT_ID('dodano_ucznia_do_klasy', 'TR') IS NOT NULL
+	DROP TRIGGER dodano_ucznia_do_klasy
+GO
+
+CREATE TRIGGER dodano_ucznia_do_klasy ON [Uczniowie Klas]
+AFTER INSERT
+AS BEGIN
+SELECT [Nazwa Klasy], COUNT([Nazwa Klasy]) AS [Ilosc uczniow w klasie] FROM [Uczniowie Klas] GROUP BY [Nazwa Klasy]
+END
+GO
+```
+```sql
+IF OBJECT_ID('usunieto_ucznia_do_klasy', 'TR') IS NOT NULL
+	DROP TRIGGER usunieto_ucznia_do_klasy
+GO
+
+CREATE TRIGGER usunieto_ucznia_do_klasy ON [Uczniowie Klas]
+AFTER DELETE
+AS BEGIN
+SELECT [Nazwa Klasy], COUNT([Nazwa Klasy]) AS [Ilosc uczniow w klasie] FROM [Uczniowie Klas] GROUP BY [Nazwa Klasy]
+END
+GO
+```
 
 # Skrypt tworzący bazę danych
 
