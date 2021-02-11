@@ -5,14 +5,12 @@
 ```diff
 + podstawowe założenia projektu (cel, główne założenia, możliwości, ograniczenia przyjęte przy projektowaniu),
 + diagram ER,
-- schemat bazy danych (diagram relacji),
-- dodatkowe więzy integralności danych (niezapisane w schemacie),
-- utworzone indeksy,
-- opis stworzonych widoków,
-- opis procedur składowanych,
-- opis wyzwalaczy,
-- skrypt tworzący bazę danych,
-- typowe zapytania.
++ schemat bazy danych (diagram relacji),
++ opis stworzonych widoków,
++ opis procedur składowanych,
++ opis wyzwalaczy,
++ skrypt tworzący bazę danych,
++ typowe zapytania.
 ```
 
 ## Minimalne wymagania dotyczące bazy danych:
@@ -22,9 +20,9 @@
 + baza powinna zawierać dane dotyczące atrybutów, których wartość zmienia się w czasie,
 + baza powinna zawierać tabele realizujące jeden ze schematów dziedziczenia,
 + 10 widoków lub funkcji,
-- baza danych powinna być odpowiednio oprogramowana z wykorzystaniem procedur składowanych i wyzwalaczy (co najmniej po 5 procedur i po 5 wyzwalaczy).
++ baza danych powinna być odpowiednio oprogramowana z wykorzystaniem procedur składowanych i wyzwalaczy (co najmniej po 5 procedur i po 5 wyzwalaczy).
 + należy zaprojektować strategię pielęgnacji bazy danych (kopie zapasowe),
-- można utworzyć dwa programy klienckie: jeden umożliwiający pracę administratorską (użytkowników ze zwiększonymi uprawnieniami), drugi umożliwiający pracę zwykłych użytkowników.
++ można utworzyć dwa programy klienckie: jeden umożliwiający pracę administratorską (użytkowników ze zwiększonymi uprawnieniami), drugi umożliwiający pracę zwykłych użytkowników.
 ```
 
 # Tabele
@@ -1035,7 +1033,3 @@ GO
 
 SELECT * FROM dbo.plan_lekcji('1A')
 ```
-
-# Typowe zapytania
-
-> tak jak wyżej
